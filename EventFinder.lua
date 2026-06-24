@@ -1,10 +1,11 @@
 --[[
-    PROFESSIONAL KEYWORD SEARCH v5.0
-    - Left-click: Fire event with parameters (fixed error handling)
-    - Right-click: Copy path (or inspect if Studio tool loaded)
-    - Copy All / Export (TXT, CSV, JSON)
-    - File Viewer & Editor – view/edit exported files
-    - Full scrolling, filter, progress bar
+    PROFESSIONAL KEYWORD SEARCH v6.0 – Full File Manager
+    - File browser with search/filter
+    - Ctrl+Click: Select multiple files
+    - Alt+Click: Quick preview file
+    - Press X: Edit selected file
+    - Delete/rename files
+    - Export results directly
 ]]
 
 local player = game.Players.LocalPlayer
@@ -42,31 +43,31 @@ ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = player:WaitForChild("PlayerGui")
 
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0.42, 0, 0.85, 0)
-MainFrame.Position = UDim2.new(0.29, 0, 0.075, 0)
+MainFrame.Size = UDim2.new(0.44, 0, 0.88, 0)
+MainFrame.Position = UDim2.new(0.28, 0, 0.06, 0)
 MainFrame.BackgroundColor3 = Color3.fromRGB(28, 28, 38)
 MainFrame.BorderSizePixel = 0
 MainFrame.ClipsDescendants = true
 MainFrame.Parent = ScreenGui
 local UICorner = Instance.new("UICorner")
-UICorner.CornerRadius = UDim.new(0.02, 0)
+UICorner.CornerRadius = UDim.new(0.015, 0)
 UICorner.Parent = MainFrame
 
 -- Title Bar
 local TitleBar = Instance.new("Frame")
-TitleBar.Size = UDim2.new(1, 0, 0.06, 0)
+TitleBar.Size = UDim2.new(1, 0, 0.055, 0)
 TitleBar.BackgroundColor3 = Color3.fromRGB(38, 38, 50)
 TitleBar.BorderSizePixel = 0
 TitleBar.Parent = MainFrame
 local TitleBarCorner = Instance.new("UICorner")
-TitleBarCorner.CornerRadius = UDim.new(0.02, 0)
+TitleBarCorner.CornerRadius = UDim.new(0.015, 0)
 TitleBarCorner.Parent = TitleBar
 
 local Title = Instance.new("TextLabel")
-Title.Size = UDim2.new(0.6, 0, 1, 0)
+Title.Size = UDim2.new(0.55, 0, 1, 0)
 Title.Position = UDim2.new(0.03, 0, 0, 0)
 Title.Text = "🔍 Keyword Search"
-Title.TextSize = 20
+Title.TextSize = 19
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.BackgroundTransparency = 1
 Title.Font = Enum.Font.GothamBold
@@ -77,17 +78,17 @@ local MatchCount = Instance.new("TextLabel")
 MatchCount.Size = UDim2.new(0.25, 0, 1, 0)
 MatchCount.Position = UDim2.new(0.7, 0, 0, 0)
 MatchCount.Text = "0 found"
-MatchCount.TextSize = 14
+MatchCount.TextSize = 13
 MatchCount.TextColor3 = Color3.fromRGB(180, 180, 200)
 MatchCount.BackgroundTransparency = 1
 MatchCount.Font = Enum.Font.Gotham
 MatchCount.Parent = TitleBar
 
 local CloseBtn = Instance.new("TextButton")
-CloseBtn.Size = UDim2.new(0.05, 0, 1, 0)
-CloseBtn.Position = UDim2.new(0.95, 0, 0, 0)
+CloseBtn.Size = UDim2.new(0.045, 0, 1, 0)
+CloseBtn.Position = UDim2.new(0.955, 0, 0, 0)
 CloseBtn.Text = "✕"
-CloseBtn.TextSize = 18
+CloseBtn.TextSize = 17
 CloseBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
 CloseBtn.BackgroundTransparency = 1
 CloseBtn.Font = Enum.Font.GothamBold
@@ -127,8 +128,8 @@ end)
 
 -- Content
 local Content = Instance.new("Frame")
-Content.Size = UDim2.new(1, -16, 1, -0.09)
-Content.Position = UDim2.new(0, 8, 0.08, 0)
+Content.Size = UDim2.new(1, -16, 1, -0.08)
+Content.Position = UDim2.new(0, 8, 0.075, 0)
 Content.BackgroundTransparency = 1
 Content.Parent = MainFrame
 
@@ -139,7 +140,7 @@ ProgressView.BackgroundTransparency = 1
 ProgressView.Parent = Content
 
 local StatusLabel = Instance.new("TextLabel")
-StatusLabel.Size = UDim2.new(1, 0, 0.1, 0)
+StatusLabel.Size = UDim2.new(1, 0, 0.09, 0)
 StatusLabel.Position = UDim2.new(0, 0, 0.05, 0)
 StatusLabel.BackgroundTransparency = 1
 StatusLabel.Text = "Preparing scan..."
@@ -149,7 +150,7 @@ StatusLabel.TextSize = 16
 StatusLabel.Parent = ProgressView
 
 local BarBg = Instance.new("Frame")
-BarBg.Size = UDim2.new(0.9, 0, 0.06, 0)
+BarBg.Size = UDim2.new(0.9, 0, 0.055, 0)
 BarBg.Position = UDim2.new(0.05, 0, 0.2, 0)
 BarBg.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
 BarBg.BorderSizePixel = 0
@@ -174,7 +175,7 @@ Grad.Color = ColorSequence.new({
 Grad.Parent = BarFill
 
 local ProgressText = Instance.new("TextLabel")
-ProgressText.Size = UDim2.new(1, 0, 0.08, 0)
+ProgressText.Size = UDim2.new(1, 0, 0.07, 0)
 ProgressText.Position = UDim2.new(0, 0, 0.3, 0)
 ProgressText.BackgroundTransparency = 1
 ProgressText.Text = "0%"
@@ -184,8 +185,8 @@ ProgressText.TextSize = 18
 ProgressText.Parent = ProgressView
 
 local FoundLabel = Instance.new("TextLabel")
-FoundLabel.Size = UDim2.new(1, 0, 0.08, 0)
-FoundLabel.Position = UDim2.new(0, 0, 0.42, 0)
+FoundLabel.Size = UDim2.new(1, 0, 0.07, 0)
+FoundLabel.Position = UDim2.new(0, 0, 0.4, 0)
 FoundLabel.BackgroundTransparency = 1
 FoundLabel.Text = "Found: 0 matches"
 FoundLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
@@ -194,8 +195,8 @@ FoundLabel.TextSize = 15
 FoundLabel.Parent = ProgressView
 
 local CancelBtn = Instance.new("TextButton")
-CancelBtn.Size = UDim2.new(0.25, 0, 0.08, 0)
-CancelBtn.Position = UDim2.new(0.375, 0, 0.55, 0)
+CancelBtn.Size = UDim2.new(0.2, 0, 0.07, 0)
+CancelBtn.Position = UDim2.new(0.4, 0, 0.52, 0)
 CancelBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
 CancelBtn.BorderSizePixel = 0
 CancelBtn.Text = "Cancel"
@@ -226,12 +227,12 @@ ResultsView.Parent = Content
 
 -- Toolbar
 local Toolbar = Instance.new("Frame")
-Toolbar.Size = UDim2.new(1, 0, 0.14, 0)
+Toolbar.Size = UDim2.new(1, 0, 0.12, 0)
 Toolbar.BackgroundTransparency = 1
 Toolbar.Parent = ResultsView
 
 local FilterBox = Instance.new("TextBox")
-FilterBox.Size = UDim2.new(0.3, -5, 1, 0)
+FilterBox.Size = UDim2.new(0.28, -5, 1, 0)
 FilterBox.Position = UDim2.new(0, 0, 0, 0)
 FilterBox.BackgroundColor3 = Color3.fromRGB(22, 22, 32)
 FilterBox.BorderSizePixel = 0
@@ -248,8 +249,8 @@ FilterCorner.Parent = FilterBox
 
 -- Copy All button
 local CopyAllBtn = Instance.new("TextButton")
-CopyAllBtn.Size = UDim2.new(0.15, -5, 1, 0)
-CopyAllBtn.Position = UDim2.new(0.32, 0, 0, 0)
+CopyAllBtn.Size = UDim2.new(0.14, -5, 1, 0)
+CopyAllBtn.Position = UDim2.new(0.3, 0, 0, 0)
 CopyAllBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
 CopyAllBtn.BorderSizePixel = 0
 CopyAllBtn.Text = "📋 Copy All"
@@ -263,8 +264,8 @@ CopyCorner.Parent = CopyAllBtn
 
 -- Export button
 local ExportBtn = Instance.new("TextButton")
-ExportBtn.Size = UDim2.new(0.15, -5, 1, 0)
-ExportBtn.Position = UDim2.new(0.49, 0, 0, 0)
+ExportBtn.Size = UDim2.new(0.14, -5, 1, 0)
+ExportBtn.Position = UDim2.new(0.46, 0, 0, 0)
 ExportBtn.BackgroundColor3 = Color3.fromRGB(50, 70, 50)
 ExportBtn.BorderSizePixel = 0
 ExportBtn.Text = "📄 Export"
@@ -278,11 +279,11 @@ ExportCorner.Parent = ExportBtn
 
 -- View Files button
 local ViewFilesBtn = Instance.new("TextButton")
-ViewFilesBtn.Size = UDim2.new(0.18, -5, 1, 0)
-ViewFilesBtn.Position = UDim2.new(0.66, 0, 0, 0)
+ViewFilesBtn.Size = UDim2.new(0.16, -5, 1, 0)
+ViewFilesBtn.Position = UDim2.new(0.62, 0, 0, 0)
 ViewFilesBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 90)
 ViewFilesBtn.BorderSizePixel = 0
-ViewFilesBtn.Text = "📂 View Files"
+ViewFilesBtn.Text = "📂 Files"
 ViewFilesBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 ViewFilesBtn.Font = Enum.Font.GothamBold
 ViewFilesBtn.TextSize = 11
@@ -291,10 +292,22 @@ local ViewFilesCorner = Instance.new("UICorner")
 ViewFilesCorner.CornerRadius = UDim.new(0.5, 0)
 ViewFilesCorner.Parent = ViewFilesBtn
 
+-- Shortcuts label
+local ShortcutsLabel = Instance.new("TextLabel")
+ShortcutsLabel.Size = UDim2.new(0.2, -5, 1, 0)
+ShortcutsLabel.Position = UDim2.new(0.8, 0, 0, 0)
+ShortcutsLabel.BackgroundTransparency = 1
+ShortcutsLabel.Text = "⚡ Ctrl+Click | X=Edit | Del=Delete"
+ShortcutsLabel.TextColor3 = Color3.fromRGB(150, 150, 170)
+ShortcutsLabel.Font = Enum.Font.Gotham
+ShortcutsLabel.TextSize = 10
+ShortcutsLabel.TextXAlignment = Enum.TextXAlignment.Right
+ShortcutsLabel.Parent = Toolbar
+
 -- Export menu popup
 local ExportMenu = Instance.new("Frame")
-ExportMenu.Size = UDim2.new(0.25, 0, 0.3, 0)
-ExportMenu.Position = UDim2.new(0.55, 0, 0.12, 0)
+ExportMenu.Size = UDim2.new(0.2, 0, 0.25, 0)
+ExportMenu.Position = UDim2.new(0.5, 0, 0.12, 0)
 ExportMenu.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
 ExportMenu.BorderSizePixel = 0
 ExportMenu.Visible = false
@@ -357,147 +370,208 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
     end
 end)
 
--- ========== FILE VIEWER / EDITOR ==========
+-- ========== FILE MANAGER ==========
 local FileViewer = Instance.new("Frame")
-FileViewer.Size = UDim2.new(0.8, 0, 0.7, 0)
-FileViewer.Position = UDim2.new(0.1, 0, 0.15, 0)
+FileViewer.Size = UDim2.new(0.85, 0, 0.8, 0)
+FileViewer.Position = UDim2.new(0.075, 0, 0.1, 0)
 FileViewer.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
 FileViewer.BorderSizePixel = 0
 FileViewer.Visible = false
 FileViewer.Parent = MainFrame
 local FileViewerCorner = Instance.new("UICorner")
-FileViewerCorner.CornerRadius = UDim.new(0.02, 0)
+FileViewerCorner.CornerRadius = UDim.new(0.015, 0)
 FileViewerCorner.Parent = FileViewer
 
-local FileViewerTitle = Instance.new("Frame")
-FileViewerTitle.Size = UDim2.new(1, 0, 0.08, 0)
-FileViewerTitle.BackgroundColor3 = Color3.fromRGB(45, 45, 60)
-FileViewerTitle.BorderSizePixel = 0
-FileViewerTitle.Parent = FileViewer
+-- File Viewer Title
+local FVTitle = Instance.new("Frame")
+FVTitle.Size = UDim2.new(1, 0, 0.06, 0)
+FVTitle.BackgroundColor3 = Color3.fromRGB(45, 45, 60)
+FVTitle.BorderSizePixel = 0
+FVTitle.Parent = FileViewer
 local FVTitleCorner = Instance.new("UICorner")
-FVTitleCorner.CornerRadius = UDim.new(0.02, 0)
-FVTitleCorner.Parent = FileViewerTitle
+FVTitleCorner.CornerRadius = UDim.new(0.015, 0)
+FVTitleCorner.Parent = FVTitle
 
 local FVTitleLabel = Instance.new("TextLabel")
-FVTitleLabel.Size = UDim2.new(0.8, 0, 1, 0)
-FVTitleLabel.Position = UDim2.new(0.03, 0, 0, 0)
+FVTitleLabel.Size = UDim2.new(0.6, 0, 1, 0)
+FVTitleLabel.Position = UDim2.new(0.02, 0, 0, 0)
 FVTitleLabel.BackgroundTransparency = 1
-FVTitleLabel.Text = "📂 File Viewer"
+FVTitleLabel.Text = "📂 File Manager"
 FVTitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 FVTitleLabel.Font = Enum.Font.GothamBold
 FVTitleLabel.TextSize = 16
 FVTitleLabel.TextXAlignment = Enum.TextXAlignment.Left
-FVTitleLabel.Parent = FileViewerTitle
+FVTitleLabel.Parent = FVTitle
 
 local FVCloseBtn = Instance.new("TextButton")
-FVCloseBtn.Size = UDim2.new(0.05, 0, 1, 0)
-FVCloseBtn.Position = UDim2.new(0.95, 0, 0, 0)
+FVCloseBtn.Size = UDim2.new(0.045, 0, 1, 0)
+FVCloseBtn.Position = UDim2.new(0.955, 0, 0, 0)
 FVCloseBtn.Text = "✕"
-FVCloseBtn.TextSize = 18
+FVCloseBtn.TextSize = 17
 FVCloseBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
 FVCloseBtn.BackgroundTransparency = 1
 FVCloseBtn.Font = Enum.Font.GothamBold
-FVCloseBtn.Parent = FileViewerTitle
+FVCloseBtn.Parent = FVTitle
 FVCloseBtn.MouseButton1Click:Connect(function()
     FileViewer.Visible = false
-    ViewFilesBtn.Text = "📂 View Files"
+    ViewFilesBtn.Text = "📂 Files"
 end)
 
--- File list
-local FileListFrame = Instance.new("Frame")
-FileListFrame.Size = UDim2.new(0.3, -10, 1, -0.08)
-FileListFrame.Position = UDim2.new(0, 10, 0.08, 0)
-FileListFrame.BackgroundColor3 = Color3.fromRGB(22, 22, 35)
-FileListFrame.BorderSizePixel = 0
-FileListFrame.Parent = FileViewer
-local FLCorner = Instance.new("UICorner")
-FLCorner.CornerRadius = UDim.new(0.01, 0)
-FLCorner.Parent = FileListFrame
+-- File search bar
+local FileSearch = Instance.new("TextBox")
+FileSearch.Size = UDim2.new(0.35, -10, 0.045, 0)
+FileSearch.Position = UDim2.new(0.02, 0, 0.065, 0)
+FileSearch.BackgroundColor3 = Color3.fromRGB(22, 22, 32)
+FileSearch.BorderSizePixel = 0
+FileSearch.Text = ""
+FileSearch.PlaceholderText = "🔍 Search files..."
+FileSearch.TextColor3 = Color3.fromRGB(230, 230, 230)
+FileSearch.PlaceholderColor3 = Color3.fromRGB(130, 130, 130)
+FileSearch.Font = Enum.Font.Gotham
+FileSearch.TextSize = 13
+FileSearch.Parent = FileViewer
+local FSCorner = Instance.new("UICorner")
+FSCorner.CornerRadius = UDim.new(0.5, 0)
+FSCorner.Parent = FileSearch
+
+-- Selection info
+local SelInfo = Instance.new("TextLabel")
+SelInfo.Size = UDim2.new(0.25, 0, 0.045, 0)
+SelInfo.Position = UDim2.new(0.38, 0, 0.065, 0)
+SelInfo.BackgroundTransparency = 1
+SelInfo.Text = "0 files selected"
+SelInfo.TextColor3 = Color3.fromRGB(180, 180, 200)
+SelInfo.Font = Enum.Font.Gotham
+SelInfo.TextSize = 13
+SelInfo.TextXAlignment = Enum.TextXAlignment.Left
+SelInfo.Parent = FileViewer
+
+-- File actions
+local FileActionsBar = Instance.new("Frame")
+FileActionsBar.Size = UDim2.new(0.35, -10, 0.045, 0)
+FileActionsBar.Position = UDim2.new(0.65, 0, 0.065, 0)
+FileActionsBar.BackgroundTransparency = 1
+FileActionsBar.Parent = FileViewer
+
+local RefreshFilesBtn = Instance.new("TextButton")
+RefreshFilesBtn.Size = UDim2.new(0.25, -5, 1, 0)
+RefreshFilesBtn.Position = UDim2.new(0, 0, 0, 0)
+RefreshFilesBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 80)
+RefreshFilesBtn.BorderSizePixel = 0
+RefreshFilesBtn.Text = "🔄"
+RefreshFilesBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+RefreshFilesBtn.Font = Enum.Font.GothamBold
+RefreshFilesBtn.TextSize = 18
+RefreshFilesBtn.Parent = FileActionsBar
+local RFBCorner = Instance.new("UICorner")
+RFBCorner.CornerRadius = UDim.new(0.5, 0)
+RFBCorner.Parent = RefreshFilesBtn
+
+local DeleteFilesBtn = Instance.new("TextButton")
+DeleteFilesBtn.Size = UDim2.new(0.25, -5, 1, 0)
+DeleteFilesBtn.Position = UDim2.new(0.27, 0, 0, 0)
+DeleteFilesBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+DeleteFilesBtn.BorderSizePixel = 0
+DeleteFilesBtn.Text = "🗑️"
+DeleteFilesBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+DeleteFilesBtn.Font = Enum.Font.GothamBold
+DeleteFilesBtn.TextSize = 16
+DeleteFilesBtn.Parent = FileActionsBar
+local DFBCorner = Instance.new("UICorner")
+DFBCorner.CornerRadius = UDim.new(0.5, 0)
+DFBCorner.Parent = DeleteFilesBtn
+
+local EditFileBtn = Instance.new("TextButton")
+EditFileBtn.Size = UDim2.new(0.25, -5, 1, 0)
+EditFileBtn.Position = UDim2.new(0.54, 0, 0, 0)
+EditFileBtn.BackgroundColor3 = Color3.fromRGB(60, 120, 180)
+EditFileBtn.BorderSizePixel = 0
+EditFileBtn.Text = "✏️"
+EditFileBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+EditFileBtn.Font = Enum.Font.GothamBold
+EditFileBtn.TextSize = 16
+EditFileBtn.Parent = FileActionsBar
+local EFBCorner = Instance.new("UICorner")
+EFBCorner.CornerRadius = UDim.new(0.5, 0)
+EFBCorner.Parent = EditFileBtn
+
+local OpenFileBtn = Instance.new("TextButton")
+OpenFileBtn.Size = UDim2.new(0.25, -5, 1, 0)
+OpenFileBtn.Position = UDim2.new(0.81, 0, 0, 0)
+OpenFileBtn.BackgroundColor3 = Color3.fromRGB(60, 180, 80)
+OpenFileBtn.BorderSizePixel = 0
+OpenFileBtn.Text = "📂"
+OpenFileBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+OpenFileBtn.Font = Enum.Font.GothamBold
+OpenFileBtn.TextSize = 16
+OpenFileBtn.Parent = FileActionsBar
+local OFBCorner = Instance.new("UICorner")
+OFBCorner.CornerRadius = UDim.new(0.5, 0)
+OFBCorner.Parent = OpenFileBtn
+
+-- File list (left panel)
+local FileListPanel = Instance.new("Frame")
+FileListPanel.Size = UDim2.new(0.35, -10, 1, -0.125)
+FileListPanel.Position = UDim2.new(0, 10, 0.115, 0)
+FileListPanel.BackgroundColor3 = Color3.fromRGB(22, 22, 35)
+FileListPanel.BorderSizePixel = 0
+FileListPanel.Parent = FileViewer
+local FLPCorner = Instance.new("UICorner")
+FLPCorner.CornerRadius = UDim.new(0.01, 0)
+FLPCorner.Parent = FileListPanel
 
 local FileListScroll = Instance.new("ScrollingFrame")
 FileListScroll.Size = UDim2.new(1, 0, 1, 0)
 FileListScroll.BackgroundTransparency = 1
 FileListScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
 FileListScroll.ScrollBarThickness = 4
-FileListScroll.Parent = FileListFrame
+FileListScroll.Parent = FileListPanel
 
 local FileListLayout = Instance.new("UIListLayout")
 FileListLayout.Padding = UDim.new(0, 2)
 FileListLayout.Parent = FileListScroll
 
-local FileLabel = Instance.new("TextLabel")
-FileLabel.Size = UDim2.new(0.7, -10, 0.06, 0)
-FileLabel.Position = UDim2.new(0.3, 10, 0.08, 0)
-FileLabel.BackgroundTransparency = 1
-FileLabel.Text = "File Content:"
-FileLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
-FileLabel.Font = Enum.Font.Gotham
-FileLabel.TextSize = 14
-FileLabel.TextXAlignment = Enum.TextXAlignment.Left
-FileLabel.Parent = FileViewer
+-- File content (right panel)
+local FileContentPanel = Instance.new("Frame")
+FileContentPanel.Size = UDim2.new(0.65, -10, 1, -0.125)
+FileContentPanel.Position = UDim2.new(0.35, 10, 0.115, 0)
+FileContentPanel.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+FileContentPanel.BorderSizePixel = 0
+FileContentPanel.Parent = FileViewer
+local FCPCorner = Instance.new("UICorner")
+FCPCorner.CornerRadius = UDim.new(0.01, 0)
+FCPCorner.Parent = FileContentPanel
 
--- File content editor
 local FileEditor = Instance.new("TextBox")
-FileEditor.Size = UDim2.new(0.7, -20, 0.82, 0)
-FileEditor.Position = UDim2.new(0.3, 10, 0.08, 0)
-FileEditor.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
-FileEditor.BorderSizePixel = 0
-FileEditor.Text = ""
-FileEditor.TextColor3 = Color3.fromRGB(230, 230, 230)
+FileEditor.Size = UDim2.new(1, -10, 1, -10)
+FileEditor.Position = UDim2.new(0, 5, 0, 5)
+FileEditor.BackgroundTransparency = 1
+FileEditor.Text = "Select a file to view/edit"
+FileEditor.TextColor3 = Color3.fromRGB(180, 180, 200)
 FileEditor.TextWrapped = true
 FileEditor.TextScaled = false
 FileEditor.Font = Enum.Font.Code
-FileEditor.TextSize = 13
+FileEditor.TextSize = 12
 FileEditor.MultiLine = true
-FileEditor.Parent = FileViewer
-local FECorner = Instance.new("UICorner")
-FECorner.CornerRadius = UDim.new(0.01, 0)
-FECorner.Parent = FileEditor
+FileEditor.ClearTextOnFocus = false
+FileEditor.Parent = FileContentPanel
 
--- File actions
-local FileActions = Instance.new("Frame")
-FileActions.Size = UDim2.new(0.7, -20, 0.08, 0)
-FileActions.Position = UDim2.new(0.3, 10, 0.92, 0)
-FileActions.BackgroundTransparency = 1
-FileActions.Parent = FileViewer
+-- File data
+local allFiles = {}
+local selectedFiles = {} -- table of file paths
+local currentFile = nil
+local fileButtons = {} -- button -> file path
 
-local SaveFileBtn = Instance.new("TextButton")
-SaveFileBtn.Size = UDim2.new(0.25, 0, 1, 0)
-SaveFileBtn.Position = UDim2.new(0, 0, 0, 0)
-SaveFileBtn.BackgroundColor3 = Color3.fromRGB(60, 180, 80)
-SaveFileBtn.BorderSizePixel = 0
-SaveFileBtn.Text = "💾 Save"
-SaveFileBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-SaveFileBtn.Font = Enum.Font.GothamBold
-SaveFileBtn.TextSize = 14
-SaveFileBtn.Parent = FileActions
-local SFBCorner = Instance.new("UICorner")
-SFBCorner.CornerRadius = UDim.new(0.5, 0)
-SFBCorner.Parent = SaveFileBtn
+-- ========== FILE MANAGER FUNCTIONS ==========
 
-local RefreshFilesBtn = Instance.new("TextButton")
-RefreshFilesBtn.Size = UDim2.new(0.25, 0, 1, 0)
-RefreshFilesBtn.Position = UDim2.new(0.27, 0, 0, 0)
-RefreshFilesBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 80)
-RefreshFilesBtn.BorderSizePixel = 0
-RefreshFilesBtn.Text = "🔄 Refresh"
-RefreshFilesBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-RefreshFilesBtn.Font = Enum.Font.GothamBold
-RefreshFilesBtn.TextSize = 14
-RefreshFilesBtn.Parent = FileActions
-local RFBCorner = Instance.new("UICorner")
-RFBCorner.CornerRadius = UDim.new(0.5, 0)
-RFBCorner.Parent = RefreshFilesBtn
-
-local selectedFile = nil
-
--- Refresh file list
 function refreshFileList()
     for _, child in ipairs(FileListScroll:GetChildren()) do
         if child:IsA("TextButton") then child:Destroy() end
     end
+    fileButtons = {}
+    allFiles = {}
+    selectedFiles = {}
 
-    -- Check if writefile is available
     local success, files = pcall(function()
         return listfiles()
     end)
@@ -507,101 +581,327 @@ function refreshFileList()
         btn.Size = UDim2.new(1, 0, 0, 30)
         btn.BackgroundColor3 = Color3.fromRGB(45, 45, 60)
         btn.BorderSizePixel = 0
-        btn.Text = "No files (writefile unavailable)"
+        btn.Text = "⚠️ No files (writefile unavailable)"
         btn.TextColor3 = Color3.fromRGB(200, 200, 200)
         btn.Font = Enum.Font.Gotham
         btn.TextSize = 13
         btn.Parent = FileListScroll
         FileListScroll.CanvasSize = UDim2.new(0, 0, 0, 32)
+        SelInfo.Text = "0 files selected"
         return
     end
 
-    local fileList = {}
+    -- Filter for our files or show all files
+    local search = FileSearch.Text:lower()
     for _, f in ipairs(files) do
-        if f:match("KeywordSearch_Results_.*%.(txt|csv|json)$") then
-            table.insert(fileList, f)
+        local fileName = f:match("([^/\\]+)$") or f
+        if search == "" or fileName:lower():find(search) then
+            table.insert(allFiles, {path = f, name = fileName})
         end
     end
 
-    table.sort(fileList, function(a,b) return a > b end)
-
-    if #fileList == 0 then
+    if #allFiles == 0 then
         local btn = Instance.new("TextButton")
         btn.Size = UDim2.new(1, 0, 0, 30)
         btn.BackgroundColor3 = Color3.fromRGB(45, 45, 60)
         btn.BorderSizePixel = 0
-        btn.Text = "No export files found"
+        btn.Text = "No files found"
         btn.TextColor3 = Color3.fromRGB(200, 200, 200)
         btn.Font = Enum.Font.Gotham
         btn.TextSize = 13
         btn.Parent = FileListScroll
         FileListScroll.CanvasSize = UDim2.new(0, 0, 0, 32)
+        SelInfo.Text = "0 files selected"
         return
     end
 
-    for _, filePath in ipairs(fileList) do
-        local fileName = filePath:match("([^/\\]+)$") or filePath
+    table.sort(allFiles, function(a,b) return a.name > b.name end)
+
+    -- Ctrl key state for multi-select
+    local ctrlDown = false
+    local shiftDown = false
+    local lastSelected = nil
+
+    UserInputService.InputBegan:Connect(function(input)
+        if input.KeyCode == Enum.KeyCode.LeftControl or input.KeyCode == Enum.KeyCode.RightControl then
+            ctrlDown = true
+        end
+        if input.KeyCode == Enum.KeyCode.LeftShift or input.KeyCode == Enum.KeyCode.RightShift then
+            shiftDown = true
+        end
+    end)
+    UserInputService.InputEnded:Connect(function(input)
+        if input.KeyCode == Enum.KeyCode.LeftControl or input.KeyCode == Enum.KeyCode.RightControl then
+            ctrlDown = false
+        end
+        if input.KeyCode == Enum.KeyCode.LeftShift or input.KeyCode == Enum.KeyCode.RightShift then
+            shiftDown = false
+        end
+    end)
+
+    for _, fileData in ipairs(allFiles) do
         local btn = Instance.new("TextButton")
         btn.Size = UDim2.new(1, 0, 0, 28)
         btn.BackgroundColor3 = Color3.fromRGB(40, 40, 55)
         btn.BorderSizePixel = 0
-        btn.Text = fileName
+        btn.Text = fileData.name
         btn.TextColor3 = Color3.fromRGB(230, 230, 230)
         btn.TextXAlignment = Enum.TextXAlignment.Left
         btn.Font = Enum.Font.Gotham
         btn.TextSize = 12
         btn.Parent = FileListScroll
+        fileButtons[btn] = fileData.path
 
-        btn.MouseEnter:Connect(function() btn.BackgroundColor3 = Color3.fromRGB(55, 55, 75) end)
-        btn.MouseLeave:Connect(function() btn.BackgroundColor3 = Color3.fromRGB(40, 40, 55) end)
+        btn.MouseEnter:Connect(function() 
+            if not selectedFiles[fileData.path] then
+                btn.BackgroundColor3 = Color3.fromRGB(55, 55, 75) 
+            end
+        end)
+        btn.MouseLeave:Connect(function() 
+            if not selectedFiles[fileData.path] then
+                btn.BackgroundColor3 = Color3.fromRGB(40, 40, 55)
+            end
+        end)
 
+        -- Click handler with Ctrl/Shift support
         btn.MouseButton1Click:Connect(function()
-            selectedFile = filePath
-            -- Load file content
-            local success, content = pcall(function()
-                return readfile(filePath)
-            end)
-            if success then
-                FileEditor.Text = content
+            local path = fileData.path
+            
+            if ctrlDown then
+                -- Toggle selection
+                if selectedFiles[path] then
+                    selectedFiles[path] = nil
+                    btn.BackgroundColor3 = Color3.fromRGB(40, 40, 55)
+                else
+                    selectedFiles[path] = true
+                    btn.BackgroundColor3 = Color3.fromRGB(70, 100, 140)
+                end
+                lastSelected = path
+            elseif shiftDown and lastSelected then
+                -- Range select
+                local inRange = false
+                for _, fd in ipairs(allFiles) do
+                    if fd.path == lastSelected or fd.path == path then
+                        inRange = not inRange
+                    end
+                    if inRange then
+                        selectedFiles[fd.path] = true
+                        local b = getButtonForPath(fd.path)
+                        if b then b.BackgroundColor3 = Color3.fromRGB(70, 100, 140) end
+                    end
+                end
+            else
+                -- Single select
+                selectedFiles = {}
                 for _, b in ipairs(FileListScroll:GetChildren()) do
                     if b:IsA("TextButton") then
                         b.BackgroundColor3 = Color3.fromRGB(40, 40, 55)
                     end
                 end
+                selectedFiles[path] = true
                 btn.BackgroundColor3 = Color3.fromRGB(70, 100, 140)
-            else
-                FileEditor.Text = "Error loading file: " .. tostring(content)
+                lastSelected = path
+                -- Load file for editing
+                loadFileForEditing(path)
             end
+            
+            updateSelectionInfo()
+        end)
+
+        -- Alt+Click: Quick preview
+        btn.MouseButton2Click:Connect(function()
+            local path = fileData.path
+            loadFileForEditing(path)
+            -- Highlight it
+            for _, b in ipairs(FileListScroll:GetChildren()) do
+                if b:IsA("TextButton") then
+                    b.BackgroundColor3 = Color3.fromRGB(40, 40, 55)
+                end
+            end
+            btn.BackgroundColor3 = Color3.fromRGB(60, 140, 60)
         end)
     end
 
-    FileListScroll.CanvasSize = UDim2.new(0, 0, 0, #fileList * 30 + 10)
+    FileListScroll.CanvasSize = UDim2.new(0, 0, 0, #allFiles * 30 + 10)
+    updateSelectionInfo()
+end
+
+function getButtonForPath(path)
+    for btn, pth in pairs(fileButtons) do
+        if pth == path then
+            return btn
+        end
+    end
+    return nil
+end
+
+function loadFileForEditing(path)
+    currentFile = path
+    local success, content = pcall(function()
+        return readfile(path)
+    end)
+    if success then
+        FileEditor.Text = content
+        FileEditor.TextColor3 = Color3.fromRGB(230, 230, 230)
+    else
+        FileEditor.Text = "Error loading file: " .. tostring(content)
+        FileEditor.TextColor3 = Color3.fromRGB(255, 100, 100)
+    end
+end
+
+function updateSelectionInfo()
+    local count = 0
+    for _ in pairs(selectedFiles) do count = count + 1 end
+    SelInfo.Text = count .. " file" .. (count ~= 1 and "s" or "") .. " selected"
 end
 
 -- Save file
-SaveFileBtn.MouseButton1Click:Connect(function()
-    if not selectedFile then
+function saveCurrentFile()
+    if not currentFile then
         print("No file selected")
         return
     end
     local success, err = pcall(function()
-        writefile(selectedFile, FileEditor.Text)
+        writefile(currentFile, FileEditor.Text)
     end)
     if success then
-        print("💾 File saved: " .. selectedFile)
-        SaveFileBtn.Text = "✅ Saved!"
-        task.wait(1)
-        SaveFileBtn.Text = "💾 Save"
+        print("💾 File saved: " .. currentFile)
+        EditFileBtn.Text = "✅"
+        task.wait(0.8)
+        EditFileBtn.Text = "✏️"
     else
         print("❌ Error saving: " .. tostring(err))
-        SaveFileBtn.Text = "❌ Error"
-        task.wait(1)
-        SaveFileBtn.Text = "💾 Save"
+        EditFileBtn.Text = "❌"
+        task.wait(0.8)
+        EditFileBtn.Text = "✏️"
+    end
+end
+
+-- Delete selected files
+function deleteSelectedFiles()
+    local count = 0
+    for path in pairs(selectedFiles) do
+        count = count + 1
+    end
+    if count == 0 then
+        print("No files selected")
+        return
+    end
+    
+    -- Confirm deletion
+    local confirm = Instance.new("Frame")
+    confirm.Size = UDim2.new(0.3, 0, 0.15, 0)
+    confirm.Position = UDim2.new(0.35, 0, 0.4, 0)
+    confirm.BackgroundColor3 = Color3.fromRGB(30, 30, 50)
+    confirm.BorderSizePixel = 0
+    confirm.Parent = FileViewer
+    local confirmCorner = Instance.new("UICorner")
+    confirmCorner.CornerRadius = UDim.new(0.02, 0)
+    confirmCorner.Parent = confirm
+    
+    local msg = Instance.new("TextLabel")
+    msg.Size = UDim2.new(1, 0, 0.4, 0)
+    msg.Position = UDim2.new(0, 0, 0.1, 0)
+    msg.BackgroundTransparency = 1
+    msg.Text = "Delete " .. count .. " file(s)?"
+    msg.TextColor3 = Color3.fromRGB(255, 255, 255)
+    msg.Font = Enum.Font.GothamBold
+    msg.TextSize = 16
+    msg.Parent = confirm
+    
+    local yesBtn = Instance.new("TextButton")
+    yesBtn.Size = UDim2.new(0.3, 0, 0.3, 0)
+    yesBtn.Position = UDim2.new(0.1, 0, 0.55, 0)
+    yesBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+    yesBtn.BorderSizePixel = 0
+    yesBtn.Text = "Yes"
+    yesBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    yesBtn.Font = Enum.Font.GothamBold
+    yesBtn.TextSize = 16
+    yesBtn.Parent = confirm
+    local yCorner = Instance.new("UICorner")
+    yCorner.CornerRadius = UDim.new(0.5, 0)
+    yCorner.Parent = yesBtn
+    
+    local noBtn = Instance.new("TextButton")
+    noBtn.Size = UDim2.new(0.3, 0, 0.3, 0)
+    noBtn.Position = UDim2.new(0.6, 0, 0.55, 0)
+    noBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
+    noBtn.BorderSizePixel = 0
+    noBtn.Text = "No"
+    noBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    noBtn.Font = Enum.Font.GothamBold
+    noBtn.TextSize = 16
+    noBtn.Parent = confirm
+    local nCorner = Instance.new("UICorner")
+    nCorner.CornerRadius = UDim.new(0.5, 0)
+    nCorner.Parent = noBtn
+    
+    yesBtn.MouseButton1Click:Connect(function()
+        for path in pairs(selectedFiles) do
+            pcall(function()
+                delfile(path)
+            end)
+        end
+        confirm:Destroy()
+        refreshFileList()
+        FileEditor.Text = "Select a file to view/edit"
+        currentFile = nil
+        print("🗑️ Deleted " .. count .. " files")
+    end)
+    
+    noBtn.MouseButton1Click:Connect(function()
+        confirm:Destroy()
+    end)
+end
+
+-- Open file externally (if possible)
+function openFileExternally()
+    if not currentFile then
+        print("No file selected")
+        return
+    end
+    pcall(function()
+        -- Try to open with default program
+        os.execute('start "" "' .. currentFile .. '"')
+        print("📂 Opening: " .. currentFile)
+    end)
+end
+
+-- Keyboard shortcuts in File Viewer
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if not FileViewer.Visible then return end
+    
+    -- X = Edit (save)
+    if input.KeyCode == Enum.KeyCode.X then
+        saveCurrentFile()
+    end
+    
+    -- Delete = Delete selected files
+    if input.KeyCode == Enum.KeyCode.Delete then
+        deleteSelectedFiles()
+    end
+    
+    -- Ctrl+A = Select all
+    if input.KeyCode == Enum.KeyCode.A and UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then
+        for _, fd in ipairs(allFiles) do
+            selectedFiles[fd.path] = true
+            local b = getButtonForPath(fd.path)
+            if b then b.BackgroundColor3 = Color3.fromRGB(70, 100, 140) end
+        end
+        updateSelectionInfo()
     end
 end)
 
--- Refresh files
+-- Button handlers
 RefreshFilesBtn.MouseButton1Click:Connect(refreshFileList)
+EditFileBtn.MouseButton1Click:Connect(saveCurrentFile)
+OpenFileBtn.MouseButton1Click:Connect(openFileExternally)
+DeleteFilesBtn.MouseButton1Click:Connect(deleteSelectedFiles)
+
+-- File search
+FileSearch:GetPropertyChangedSignal("Text"):Connect(refreshFileList)
 
 -- View Files button
 ViewFilesBtn.MouseButton1Click:Connect(function()
@@ -610,21 +910,21 @@ ViewFilesBtn.MouseButton1Click:Connect(function()
         ViewFilesBtn.Text = "📂 Close Files"
         refreshFileList()
     else
-        ViewFilesBtn.Text = "📂 View Files"
+        ViewFilesBtn.Text = "📂 Files"
     end
 end)
 
--- Scrolling list
+-- Scrolling list (main results)
 local ListFrame = Instance.new("ScrollingFrame")
-ListFrame.Size = UDim2.new(1, 0, 1, -0.16)
-ListFrame.Position = UDim2.new(0, 0, 0.16, 0)
+ListFrame.Size = UDim2.new(1, 0, 1, -0.14)
+ListFrame.Position = UDim2.new(0, 0, 0.14, 0)
 ListFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 28)
 ListFrame.BorderSizePixel = 0
 ListFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
 ListFrame.ScrollBarThickness = 6
 ListFrame.Parent = ResultsView
 local ListCorner = Instance.new("UICorner")
-ListCorner.CornerRadius = UDim.new(0.02, 0)
+ListCorner.CornerRadius = UDim.new(0.015, 0)
 ListCorner.Parent = ListFrame
 
 local ListLayout = Instance.new("UIListLayout")
@@ -633,18 +933,18 @@ ListLayout.Parent = ListFrame
 
 -- Fire Dialog (popup)
 local FireDialog = Instance.new("Frame")
-FireDialog.Size = UDim2.new(0.75, 0, 0.55, 0)
-FireDialog.Position = UDim2.new(0.125, 0, 0.225, 0)
+FireDialog.Size = UDim2.new(0.7, 0, 0.5, 0)
+FireDialog.Position = UDim2.new(0.15, 0, 0.25, 0)
 FireDialog.BackgroundColor3 = Color3.fromRGB(35, 35, 50)
 FireDialog.BorderSizePixel = 0
 FireDialog.Visible = false
 FireDialog.Parent = MainFrame
 local DialogCorner = Instance.new("UICorner")
-DialogCorner.CornerRadius = UDim.new(0.02, 0)
+DialogCorner.CornerRadius = UDim.new(0.015, 0)
 DialogCorner.Parent = FireDialog
 
 local DialogTitle = Instance.new("TextLabel")
-DialogTitle.Size = UDim2.new(1, 0, 0.12, 0)
+DialogTitle.Size = UDim2.new(1, 0, 0.1, 0)
 DialogTitle.Position = UDim2.new(0, 0, 0, 0)
 DialogTitle.BackgroundTransparency = 1
 DialogTitle.Text = "🔥 Fire Event"
@@ -654,8 +954,8 @@ DialogTitle.TextSize = 18
 DialogTitle.Parent = FireDialog
 
 local EventPathLabel = Instance.new("TextLabel")
-EventPathLabel.Size = UDim2.new(1, -20, 0.12, 0)
-EventPathLabel.Position = UDim2.new(0, 10, 0.12, 0)
+EventPathLabel.Size = UDim2.new(1, -20, 0.1, 0)
+EventPathLabel.Position = UDim2.new(0, 10, 0.1, 0)
 EventPathLabel.BackgroundTransparency = 1
 EventPathLabel.Text = "Event: "
 EventPathLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
@@ -665,8 +965,8 @@ EventPathLabel.TextXAlignment = Enum.TextXAlignment.Left
 EventPathLabel.Parent = FireDialog
 
 local ParamLabel = Instance.new("TextLabel")
-ParamLabel.Size = UDim2.new(1, -20, 0.1, 0)
-ParamLabel.Position = UDim2.new(0, 10, 0.25, 0)
+ParamLabel.Size = UDim2.new(1, -20, 0.08, 0)
+ParamLabel.Position = UDim2.new(0, 10, 0.22, 0)
 ParamLabel.BackgroundTransparency = 1
 ParamLabel.Text = "Parameters (comma separated):"
 ParamLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
@@ -676,8 +976,8 @@ ParamLabel.TextXAlignment = Enum.TextXAlignment.Left
 ParamLabel.Parent = FireDialog
 
 local ParamBox = Instance.new("TextBox")
-ParamBox.Size = UDim2.new(1, -20, 0.2, 0)
-ParamBox.Position = UDim2.new(0, 10, 0.35, 0)
+ParamBox.Size = UDim2.new(1, -20, 0.18, 0)
+ParamBox.Position = UDim2.new(0, 10, 0.32, 0)
 ParamBox.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
 ParamBox.BorderSizePixel = 0
 ParamBox.Text = ""
@@ -691,10 +991,9 @@ local ParamCorner = Instance.new("UICorner")
 ParamCorner.CornerRadius = UDim.new(0.5, 0)
 ParamCorner.Parent = ParamBox
 
--- Error display
 local ErrorLabel = Instance.new("TextLabel")
 ErrorLabel.Size = UDim2.new(1, -20, 0.12, 0)
-ErrorLabel.Position = UDim2.new(0, 10, 0.58, 0)
+ErrorLabel.Position = UDim2.new(0, 10, 0.53, 0)
 ErrorLabel.BackgroundTransparency = 1
 ErrorLabel.Text = ""
 ErrorLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
@@ -705,8 +1004,8 @@ ErrorLabel.TextWrapped = true
 ErrorLabel.Parent = FireDialog
 
 local FireBtn = Instance.new("TextButton")
-FireBtn.Size = UDim2.new(0.28, 0, 0.12, 0)
-FireBtn.Position = UDim2.new(0.1, 0, 0.75, 0)
+FireBtn.Size = UDim2.new(0.25, 0, 0.1, 0)
+FireBtn.Position = UDim2.new(0.1, 0, 0.7, 0)
 FireBtn.BackgroundColor3 = Color3.fromRGB(60, 180, 80)
 FireBtn.BorderSizePixel = 0
 FireBtn.Text = "🔥 Fire"
@@ -719,8 +1018,8 @@ FireCorner.CornerRadius = UDim.new(0.5, 0)
 FireCorner.Parent = FireBtn
 
 local CancelFireBtn = Instance.new("TextButton")
-CancelFireBtn.Size = UDim2.new(0.28, 0, 0.12, 0)
-CancelFireBtn.Position = UDim2.new(0.62, 0, 0.75, 0)
+CancelFireBtn.Size = UDim2.new(0.25, 0, 0.1, 0)
+CancelFireBtn.Position = UDim2.new(0.65, 0, 0.7, 0)
 CancelFireBtn.BackgroundColor3 = Color3.fromRGB(180, 60, 60)
 CancelFireBtn.BorderSizePixel = 0
 CancelFireBtn.Text = "Cancel"
@@ -734,7 +1033,7 @@ CancelFireCorner.Parent = CancelFireBtn
 
 local ResultLabel = Instance.new("TextLabel")
 ResultLabel.Size = UDim2.new(1, -20, 0.1, 0)
-ResultLabel.Position = UDim2.new(0, 10, 0.9, 0)
+ResultLabel.Position = UDim2.new(0, 10, 0.85, 0)
 ResultLabel.BackgroundTransparency = 1
 ResultLabel.Text = "Result: "
 ResultLabel.TextColor3 = Color3.fromRGB(200, 255, 200)
@@ -849,20 +1148,19 @@ function populateResults()
     for _, inst in ipairs(results) do
         local path = inst:GetFullName()
         local btn = Instance.new("TextButton")
-        btn.Size = UDim2.new(1, 0, 0, 30)
+        btn.Size = UDim2.new(1, 0, 0, 28)
         btn.BackgroundColor3 = Color3.fromRGB(40, 40, 55)
         btn.BorderSizePixel = 0
         btn.Text = path
         btn.TextColor3 = Color3.fromRGB(230, 230, 230)
         btn.TextXAlignment = Enum.TextXAlignment.Left
         btn.Font = Enum.Font.Gotham
-        btn.TextSize = 13
+        btn.TextSize = 12
         btn.Parent = ListFrame
 
         btn.MouseEnter:Connect(function() btn.BackgroundColor3 = Color3.fromRGB(55, 55, 75) end)
         btn.MouseLeave:Connect(function() btn.BackgroundColor3 = Color3.fromRGB(40, 40, 55) end)
 
-        -- Left-click: Fire event
         btn.MouseButton1Click:Connect(function()
             selectedInstance = inst
             for _, b in ipairs(ListFrame:GetChildren()) do
@@ -874,7 +1172,6 @@ function populateResults()
             showFireDialog(inst)
         end)
 
-        -- Right-click: Copy path (or inspect if available)
         btn.MouseButton2Click:Connect(function()
             if _G.InspectInstance then
                 _G.InspectInstance(inst)
@@ -890,7 +1187,7 @@ function populateResults()
     end
 
     local count = #results
-    ListFrame.CanvasSize = UDim2.new(0, 0, 0, count * 32 + 10)
+    ListFrame.CanvasSize = UDim2.new(0, 0, 0, count * 30 + 10)
     MatchCount.Text = count .. " found"
 
     FilterBox:GetPropertyChangedSignal("Text"):Connect(function()
@@ -906,11 +1203,11 @@ function populateResults()
                 end
             end
         end
-        ListFrame.CanvasSize = UDim2.new(0, 0, 0, visible * 32 + 10)
+        ListFrame.CanvasSize = UDim2.new(0, 0, 0, visible * 30 + 10)
     end)
 end
 
--- ========== FIRE DIALOG (FIXED) ==========
+-- Fire Dialog functions
 local function showFireDialog(inst)
     FireDialog.Visible = true
     EventPathLabel.Text = "Event: " .. inst:GetFullName()
@@ -928,12 +1225,14 @@ CancelFireBtn.MouseButton1Click:Connect(closeFireDialog)
 FireBtn.MouseButton1Click:Connect(function()
     if not selectedInstance then
         ResultLabel.Text = "❌ No event selected"
+        ResultLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+        ErrorLabel.Text = ""
         return
     end
 
     local argsText = ParamBox.Text
     local args = {}
-    if argsText ~= "" then
+    if argsText and argsText ~= "" then
         for part in string.gmatch(argsText, "[^,]+") do
             local trimmed = part:match("^%s*(.-)%s*$")
             if trimmed == "true" then
@@ -945,7 +1244,6 @@ FireBtn.MouseButton1Click:Connect(function()
             elseif tonumber(trimmed) then
                 table.insert(args, tonumber(trimmed))
             else
-                -- Remove quotes if present
                 local str = trimmed:match("^\"(.*)\"$") or trimmed:match("^'(.*)'$") or trimmed
                 table.insert(args, str)
             end
@@ -954,37 +1252,61 @@ FireBtn.MouseButton1Click:Connect(function()
 
     local ev = selectedInstance
     local eventType = ev.ClassName
+    local success = false
+    local resultMsg = nil
 
-    -- Clear previous errors
     ErrorLabel.Text = ""
     ResultLabel.Text = "Firing..."
+    ResultLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
 
-    local success, result = pcall(function()
+    local ok, err = pcall(function()
         if ev:IsA("RemoteEvent") then
             ev:FireServer(unpack(args))
-            return "✅ RemoteEvent fired successfully"
-        elseif ev:IsA("BindableEvent") then
-            ev:Fire(unpack(args))
-            return "✅ BindableEvent fired successfully"
+            resultMsg = "✅ RemoteEvent fired successfully"
+            success = true
         elseif ev:IsA("UnreliableRemoteEvent") then
             ev:FireServer(unpack(args))
-            return "✅ UnreliableRemoteEvent fired successfully"
+            resultMsg = "✅ UnreliableRemoteEvent fired successfully"
+            success = true
+        elseif ev:IsA("BindableEvent") then
+            ev:Fire(unpack(args))
+            resultMsg = "✅ BindableEvent fired successfully"
+            success = true
         elseif ev:IsA("RemoteFunction") then
             local response = ev:InvokeServer(unpack(args))
-            return "✅ RemoteFunction returned: " .. tostring(response)
+            resultMsg = "✅ RemoteFunction returned: " .. tostring(response)
+            success = true
         else
-            error("❌ Instance is not a fireable event. Type: " .. eventType)
+            local fired = false
+            if ev.FireServer then
+                ev:FireServer(unpack(args))
+                fired = true
+                resultMsg = "✅ Fired via FireServer (generic)"
+            elseif ev.Fire then
+                ev:Fire(unpack(args))
+                fired = true
+                resultMsg = "✅ Fired via Fire (generic)"
+            elseif ev.InvokeServer then
+                local resp = ev:InvokeServer(unpack(args))
+                fired = true
+                resultMsg = "✅ Invoked via InvokeServer (generic) – returned: " .. tostring(resp)
+            end
+            if fired then
+                success = true
+            else
+                error("This instance is not a fireable event (type: " .. eventType .. ")")
+            end
         end
     end)
 
     if success then
-        ResultLabel.Text = result
+        ResultLabel.Text = resultMsg
         ResultLabel.TextColor3 = Color3.fromRGB(200, 255, 200)
         ErrorLabel.Text = ""
     else
         ResultLabel.Text = "❌ Failed"
         ResultLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
-        ErrorLabel.Text = "Error: " .. tostring(result)
+        ErrorLabel.Text = "Error: " .. tostring(err)
     end
 end)
 
@@ -1043,14 +1365,14 @@ function exportResults(format)
 
     if success then
         print("📄 Exported to: " .. filename)
-        ExportBtn.Text = "✅ Exported!"
-        task.wait(1.5)
+        ExportBtn.Text = "✅"
+        task.wait(1)
         ExportBtn.Text = "📄 Export"
     else
         setclipboard(text)
         print("📋 Copied to clipboard (writefile unavailable)")
-        ExportBtn.Text = "📋 Copied!"
-        task.wait(1.5)
+        ExportBtn.Text = "📋"
+        task.wait(1)
         ExportBtn.Text = "📄 Export"
     end
 end
@@ -1067,13 +1389,18 @@ CopyAllBtn.MouseButton1Click:Connect(function()
     end
     setclipboard(text)
     print("📋 Copied all " .. #results .. " results to clipboard")
-    CopyAllBtn.Text = "✅ Copied!"
-    task.wait(1.5)
+    CopyAllBtn.Text = "✅"
+    task.wait(1)
     CopyAllBtn.Text = "📋 Copy All"
 end)
 
 -- ========== LAUNCH ==========
 startScan()
-print("✅ Professional Keyword Search v5.0 loaded – Press Right Shift to toggle")
-print("🔥 Left-click to fire (fixed error handling), Right-click to copy/inspect")
-print("📂 Click 'View Files' to browse and edit exported files")
+print("✅ Professional Keyword Search v6.0 – Press Right Shift to toggle")
+print("🔥 Left-click to fire, Right-click to copy/inspect")
+print("📂 Click 'Files' for full file manager:")
+print("   • Ctrl+Click: Select multiple files")
+print("   • Alt+Click: Quick preview")
+print("   • X: Save current file")
+print("   • Delete: Remove selected files")
+print("   • Ctrl+A: Select all files")
