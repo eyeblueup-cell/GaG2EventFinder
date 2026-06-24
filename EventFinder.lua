@@ -1,7 +1,5 @@
 --[[
-    PROFESSIONAL KEYWORD SEARCH v8.0 – SCRIPT VIEWER + FILE MANAGER
-    - View & edit Script/LocalScript/ModuleScript source from search results
-    - Save scripts as .lua files
+    PROFESSIONAL KEYWORD SEARCH v8.1 – FIXED FILE PREVIEW & TYPE DETECTION
 ]]
 
 local player = game.Players.LocalPlayer
@@ -554,33 +552,34 @@ local FileListLayout = Instance.new("UIListLayout")
 FileListLayout.Padding = UDim.new(0, 2)
 FileListLayout.Parent = FileListScroll
 
--- File content (right)
+-- File content (right) - FIXED: preview area with scrolling
 local FileContentPanel = Instance.new("Frame")
 FileContentPanel.Size = UDim2.new(0.65, -10, 1, -0.14)
 FileContentPanel.Position = UDim2.new(0.35, 10, 0.14, 0)
 FileContentPanel.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
 FileContentPanel.BorderSizePixel = 0
-FileContentPanel.ClipsDescendants = true
+FileContentPanel.ClipsDescendants = true  -- important for clipping
 FileContentPanel.Parent = FileViewer
 local FCPCorner = Instance.new("UICorner")
 FCPCorner.CornerRadius = UDim.new(0.01, 0)
 FCPCorner.Parent = FileContentPanel
 
+-- The preview TextBox
 local FileEditor = Instance.new("TextBox")
 FileEditor.Size = UDim2.new(1, -10, 1, -10)
 FileEditor.Position = UDim2.new(0, 5, 0, 5)
 FileEditor.BackgroundTransparency = 1
 FileEditor.Text = "Select a file to edit"
 FileEditor.TextColor3 = Color3.fromRGB(180, 180, 200)
-FileEditor.TextWrapped = true
-FileEditor.TextScaled = false
-FileEditor.Font = Enum.Font.Code
+FileEditor.TextWrapped = true          -- wrap long lines
+FileEditor.TextScaled = false          -- keep font size fixed
+FileEditor.Font = Enum.Font.Code       -- monospaced for code
 FileEditor.TextSize = 12
 FileEditor.MultiLine = true
 FileEditor.ClearTextOnFocus = false
 FileEditor.Parent = FileContentPanel
 
--- ========== SCRIPT VIEWER (NEW) ==========
+-- ========== SCRIPT VIEWER (unchanged) ==========
 local ScriptViewer = Instance.new("Frame")
 ScriptViewer.Size = UDim2.new(0.85, 0, 0.75, 0)
 ScriptViewer.Position = UDim2.new(0.075, 0, 0.12, 0)
@@ -592,7 +591,6 @@ local SVCorner = Instance.new("UICorner")
 SVCorner.CornerRadius = UDim.new(0.015, 0)
 SVCorner.Parent = ScriptViewer
 
--- Title bar
 local SVTitle = Instance.new("Frame")
 SVTitle.Size = UDim2.new(1, 0, 0.06, 0)
 SVTitle.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
@@ -626,7 +624,6 @@ SVCloseBtn.MouseButton1Click:Connect(function()
     ScriptViewer.Visible = false
 end)
 
--- Source editor
 local SVEditor = Instance.new("TextBox")
 SVEditor.Size = UDim2.new(1, -20, 1, -0.2)
 SVEditor.Position = UDim2.new(0, 10, 0.07, 0)
@@ -644,7 +641,6 @@ local SVEditorCorner = Instance.new("UICorner")
 SVEditorCorner.CornerRadius = UDim.new(0.01, 0)
 SVEditorCorner.Parent = SVEditor
 
--- Buttons
 local SVSaveBtn = Instance.new("TextButton")
 SVSaveBtn.Size = UDim2.new(0.15, 0, 0.07, 0)
 SVSaveBtn.Position = UDim2.new(0.05, 0, 0.88, 0)
@@ -876,20 +872,90 @@ function updateSelectionInfo()
     SelInfo.Text = count .. " selected"
 end
 
+-- ========== FILE PREVIEW WITH TYPE DETECTION ==========
+local function isTextContent(content)
+    -- Check if content is valid UTF-8 and mostly printable
+    if not content or #content == 0 then return true end
+    local printable = 0
+    local total = #content
+    for i = 1, math.min(total, 10000) do -- check first 10k chars for speed
+        local c = content:sub(i, i)
+        local byte = c:byte()
+        if byte then
+            -- printable: space (32) to ~ (126) or newline (10) or tab (9) or carriage return (13)
+            if (byte >= 32 and byte <= 126) or byte == 10 or byte == 9 or byte == 13 then
+                printable = printable + 1
+            end
+        else
+            -- Non-UTF8 byte -> binary
+            return false
+        end
+    end
+    local ratio = printable / math.min(total, 10000)
+    return ratio > 0.8
+end
+
+local function getFileTypeIcon(filename)
+    local ext = filename:match("%.([^%.]+)$")
+    if ext then
+        ext = ext:lower()
+        if ext == "lua" then return "📜 Lua"
+        elseif ext == "json" then return "📊 JSON"
+        elseif ext == "txt" then return "📄 Text"
+        elseif ext == "md" then return "📝 Markdown"
+        elseif ext == "xml" or ext == "html" or ext == "css" then return "🌐 Web"
+        elseif ext == "png" or ext == "jpg" or ext == "jpeg" or ext == "gif" or ext == "bmp" then return "🖼️ Image"
+        elseif ext == "mp3" or ext == "wav" or ext == "ogg" then return "🎵 Audio"
+        elseif ext == "mp4" or ext == "avi" or ext == "mov" then return "🎬 Video"
+        elseif ext == "zip" or ext == "rar" or ext == "7z" then return "📦 Archive"
+        else return "📄 " .. ext:upper()
+        end
+    end
+    return "📄 Unknown"
+end
+
 function loadFileContent(path)
     currentFilePath = path
     local success, content = pcall(function()
         return readfile(path)
     end)
-    if success then
+
+    if not success then
+        FileEditor.Text = "❌ Error loading file:\n" .. tostring(content)
+        FileEditor.TextColor3 = Color3.fromRGB(255, 100, 100)
+        return
+    end
+
+    -- Detect file type
+    local typeIcon = getFileTypeIcon(path)
+    local isText = isTextContent(content)
+
+    if isText then
         FileEditor.Text = content
         FileEditor.TextColor3 = Color3.fromRGB(230, 230, 230)
     else
-        FileEditor.Text = "Error loading file: " .. tostring(content)
-        FileEditor.TextColor3 = Color3.fromRGB(255, 100, 100)
+        -- Binary file – show message
+        FileEditor.Text = string.format(
+            [[🔒 Binary file – preview not available
+
+File: %s
+Size: %d bytes
+Type: %s
+
+This file appears to contain non‑printable data.
+You can still:
+• Save it to disk (it will be copied as‑is)
+• Open it externally with the 📂 button
+]],
+            path,
+            #content,
+            typeIcon
+        )
+        FileEditor.TextColor3 = Color3.fromRGB(200, 180, 150)
     end
 end
 
+-- ========== SAVE / DELETE / OPEN ==========
 function saveCurrentFile()
     if not currentFilePath then
         print("No file open")
@@ -1202,7 +1268,6 @@ local function checkInstance(inst)
             return
         end
     end
-    -- Also check script source
     if inst:IsA("Script") or inst:IsA("LocalScript") or inst:IsA("ModuleScript") then
         local ok, source = pcall(function() return inst.Source end)
         if ok and type(source) == "string" and matchesAny(source) then
@@ -1308,7 +1373,6 @@ function populateResults()
             end
             btn.BackgroundColor3 = Color3.fromRGB(70, 100, 140)
 
-            -- Check if it's a script
             if inst:IsA("Script") or inst:IsA("LocalScript") or inst:IsA("ModuleScript") then
                 showScriptViewer(inst)
             else
@@ -1351,7 +1415,6 @@ function populateResults()
     end)
 end
 
--- ========== Script Viewer Function ==========
 function showScriptViewer(scriptObj)
     currentScriptObject = scriptObj
     SVTitleLabel.Text = "📄 Script: " .. scriptObj.Name
@@ -1368,7 +1431,6 @@ function showScriptViewer(scriptObj)
     ScriptViewer.Visible = true
 end
 
--- ========== Fire Dialog Functions ==========
 function showFireDialog(inst)
     FireDialog.Visible = true
     EventPathLabel.Text = "Event: " .. inst:GetFullName()
@@ -1560,6 +1622,6 @@ end)
 refreshFromFilesystem()
 startScan()
 
-print("✅ Keyword Search v8.0 – Press Right Shift to toggle")
-print("🔥 Left-click: if script → view source; if event → fire")
-print("📂 Click 'Files' to manage saved files.")
+print("✅ Keyword Search v8.1 – Press Right Shift to toggle")
+print("🔥 Left-click: script → view source; event → fire")
+print("📂 File preview now detects binary files and shows friendly messages.")
