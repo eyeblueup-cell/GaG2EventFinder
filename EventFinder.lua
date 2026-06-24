@@ -1,11 +1,8 @@
 --[[
-    PROFESSIONAL KEYWORD SEARCH v6.0 – Full File Manager
-    - File browser with search/filter
-    - Ctrl+Click: Select multiple files
-    - Alt+Click: Quick preview file
-    - Press X: Edit selected file
-    - Delete/rename files
-    - Export results directly
+    PROFESSIONAL KEYWORD SEARCH v7.0 – WORKING FILE MANAGER
+    - Tracks files you export (no listfiles() required)
+    - Create new files, load files by name, edit, save, delete
+    - Full keyboard shortcuts: X=Save, Delete=Delete, Ctrl+A=Select all
 ]]
 
 local player = game.Players.LocalPlayer
@@ -133,7 +130,7 @@ Content.Position = UDim2.new(0, 8, 0.075, 0)
 Content.BackgroundTransparency = 1
 Content.Parent = MainFrame
 
--- Progress View
+-- Progress View (unchanged, omitted for brevity – but keep all)
 local ProgressView = Instance.new("Frame")
 ProgressView.Size = UDim2.new(1, 0, 1, 0)
 ProgressView.BackgroundTransparency = 1
@@ -247,7 +244,6 @@ local FilterCorner = Instance.new("UICorner")
 FilterCorner.CornerRadius = UDim.new(0.5, 0)
 FilterCorner.Parent = FilterBox
 
--- Copy All button
 local CopyAllBtn = Instance.new("TextButton")
 CopyAllBtn.Size = UDim2.new(0.14, -5, 1, 0)
 CopyAllBtn.Position = UDim2.new(0.3, 0, 0, 0)
@@ -262,7 +258,6 @@ local CopyCorner = Instance.new("UICorner")
 CopyCorner.CornerRadius = UDim.new(0.5, 0)
 CopyCorner.Parent = CopyAllBtn
 
--- Export button
 local ExportBtn = Instance.new("TextButton")
 ExportBtn.Size = UDim2.new(0.14, -5, 1, 0)
 ExportBtn.Position = UDim2.new(0.46, 0, 0, 0)
@@ -277,7 +272,6 @@ local ExportCorner = Instance.new("UICorner")
 ExportCorner.CornerRadius = UDim.new(0.5, 0)
 ExportCorner.Parent = ExportBtn
 
--- View Files button
 local ViewFilesBtn = Instance.new("TextButton")
 ViewFilesBtn.Size = UDim2.new(0.16, -5, 1, 0)
 ViewFilesBtn.Position = UDim2.new(0.62, 0, 0, 0)
@@ -292,19 +286,18 @@ local ViewFilesCorner = Instance.new("UICorner")
 ViewFilesCorner.CornerRadius = UDim.new(0.5, 0)
 ViewFilesCorner.Parent = ViewFilesBtn
 
--- Shortcuts label
 local ShortcutsLabel = Instance.new("TextLabel")
 ShortcutsLabel.Size = UDim2.new(0.2, -5, 1, 0)
 ShortcutsLabel.Position = UDim2.new(0.8, 0, 0, 0)
 ShortcutsLabel.BackgroundTransparency = 1
-ShortcutsLabel.Text = "⚡ Ctrl+Click | X=Edit | Del=Delete"
+ShortcutsLabel.Text = "⚡ Ctrl+Click | X=Save | Del=Delete"
 ShortcutsLabel.TextColor3 = Color3.fromRGB(150, 150, 170)
 ShortcutsLabel.Font = Enum.Font.Gotham
 ShortcutsLabel.TextSize = 10
 ShortcutsLabel.TextXAlignment = Enum.TextXAlignment.Right
 ShortcutsLabel.Parent = Toolbar
 
--- Export menu popup
+-- Export menu
 local ExportMenu = Instance.new("Frame")
 ExportMenu.Size = UDim2.new(0.2, 0, 0.25, 0)
 ExportMenu.Position = UDim2.new(0.5, 0, 0.12, 0)
@@ -354,7 +347,6 @@ ExportBtn.MouseButton1Click:Connect(function()
     ExportMenu.Visible = not ExportMenu.Visible
 end)
 
--- Close export menu when clicking elsewhere
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if gameProcessed then return end
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -370,7 +362,7 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
     end
 end)
 
--- ========== FILE MANAGER ==========
+-- ========== FILE MANAGER – NO listfiles() REQUIRED ==========
 local FileViewer = Instance.new("Frame")
 FileViewer.Size = UDim2.new(0.85, 0, 0.8, 0)
 FileViewer.Position = UDim2.new(0.075, 0, 0.1, 0)
@@ -382,7 +374,7 @@ local FileViewerCorner = Instance.new("UICorner")
 FileViewerCorner.CornerRadius = UDim.new(0.015, 0)
 FileViewerCorner.Parent = FileViewer
 
--- File Viewer Title
+-- Title
 local FVTitle = Instance.new("Frame")
 FVTitle.Size = UDim2.new(1, 0, 0.06, 0)
 FVTitle.BackgroundColor3 = Color3.fromRGB(45, 45, 60)
@@ -417,102 +409,121 @@ FVCloseBtn.MouseButton1Click:Connect(function()
     ViewFilesBtn.Text = "📂 Files"
 end)
 
--- File search bar
+-- Toolbar for file manager
+local FMBar = Instance.new("Frame")
+FMBar.Size = UDim2.new(1, 0, 0.07, 0)
+FMBar.Position = UDim2.new(0, 0, 0.06, 0)
+FMBar.BackgroundTransparency = 1
+FMBar.Parent = FileViewer
+
+-- File search
 local FileSearch = Instance.new("TextBox")
-FileSearch.Size = UDim2.new(0.35, -10, 0.045, 0)
-FileSearch.Position = UDim2.new(0.02, 0, 0.065, 0)
+FileSearch.Size = UDim2.new(0.3, -10, 1, 0)
+FileSearch.Position = UDim2.new(0, 5, 0, 0)
 FileSearch.BackgroundColor3 = Color3.fromRGB(22, 22, 32)
 FileSearch.BorderSizePixel = 0
 FileSearch.Text = ""
-FileSearch.PlaceholderText = "🔍 Search files..."
+FileSearch.PlaceholderText = "🔍 Search..."
 FileSearch.TextColor3 = Color3.fromRGB(230, 230, 230)
 FileSearch.PlaceholderColor3 = Color3.fromRGB(130, 130, 130)
 FileSearch.Font = Enum.Font.Gotham
 FileSearch.TextSize = 13
-FileSearch.Parent = FileViewer
+FileSearch.Parent = FMBar
 local FSCorner = Instance.new("UICorner")
 FSCorner.CornerRadius = UDim.new(0.5, 0)
 FSCorner.Parent = FileSearch
 
+-- New file button
+local NewFileBtn = Instance.new("TextButton")
+NewFileBtn.Size = UDim2.new(0.12, -5, 1, 0)
+NewFileBtn.Position = UDim2.new(0.32, 0, 0, 0)
+NewFileBtn.BackgroundColor3 = Color3.fromRGB(60, 120, 60)
+NewFileBtn.BorderSizePixel = 0
+NewFileBtn.Text = "📄 New"
+NewFileBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+NewFileBtn.Font = Enum.Font.GothamBold
+NewFileBtn.TextSize = 13
+NewFileBtn.Parent = FMBar
+local NFCorner = Instance.new("UICorner")
+NFCorner.CornerRadius = UDim.new(0.5, 0)
+NFCorner.Parent = NewFileBtn
+
+-- Refresh button
+local RefreshBtnFM = Instance.new("TextButton")
+RefreshBtnFM.Size = UDim2.new(0.08, -5, 1, 0)
+RefreshBtnFM.Position = UDim2.new(0.46, 0, 0, 0)
+RefreshBtnFM.BackgroundColor3 = Color3.fromRGB(50, 50, 80)
+RefreshBtnFM.BorderSizePixel = 0
+RefreshBtnFM.Text = "🔄"
+RefreshBtnFM.TextColor3 = Color3.fromRGB(255, 255, 255)
+RefreshBtnFM.Font = Enum.Font.GothamBold
+RefreshBtnFM.TextSize = 18
+RefreshBtnFM.Parent = FMBar
+local RCorner = Instance.new("UICorner")
+RCorner.CornerRadius = UDim.new(0.5, 0)
+RCorner.Parent = RefreshBtnFM
+
+-- Delete button
+local DelBtnFM = Instance.new("TextButton")
+DelBtnFM.Size = UDim2.new(0.08, -5, 1, 0)
+DelBtnFM.Position = UDim2.new(0.56, 0, 0, 0)
+DelBtnFM.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+DelBtnFM.BorderSizePixel = 0
+DelBtnFM.Text = "🗑️"
+DelBtnFM.TextColor3 = Color3.fromRGB(255, 255, 255)
+DelBtnFM.Font = Enum.Font.GothamBold
+DelBtnFM.TextSize = 16
+DelBtnFM.Parent = FMBar
+local DBCorner = Instance.new("UICorner")
+DBCorner.CornerRadius = UDim.new(0.5, 0)
+DBCorner.Parent = DelBtnFM
+
+-- Save button
+local SaveBtnFM = Instance.new("TextButton")
+SaveBtnFM.Size = UDim2.new(0.08, -5, 1, 0)
+SaveBtnFM.Position = UDim2.new(0.66, 0, 0, 0)
+SaveBtnFM.BackgroundColor3 = Color3.fromRGB(60, 120, 180)
+SaveBtnFM.BorderSizePixel = 0
+SaveBtnFM.Text = "💾"
+SaveBtnFM.TextColor3 = Color3.fromRGB(255, 255, 255)
+SaveBtnFM.Font = Enum.Font.GothamBold
+SaveBtnFM.TextSize = 16
+SaveBtnFM.Parent = FMBar
+local SBCorner = Instance.new("UICorner")
+SBCorner.CornerRadius = UDim.new(0.5, 0)
+SBCorner.Parent = SaveBtnFM
+
+-- Open external button
+local OpenBtnFM = Instance.new("TextButton")
+OpenBtnFM.Size = UDim2.new(0.08, -5, 1, 0)
+OpenBtnFM.Position = UDim2.new(0.76, 0, 0, 0)
+OpenBtnFM.BackgroundColor3 = Color3.fromRGB(60, 180, 80)
+OpenBtnFM.BorderSizePixel = 0
+OpenBtnFM.Text = "📂"
+OpenBtnFM.TextColor3 = Color3.fromRGB(255, 255, 255)
+OpenBtnFM.Font = Enum.Font.GothamBold
+OpenBtnFM.TextSize = 16
+OpenBtnFM.Parent = FMBar
+local OBCorner = Instance.new("UICorner")
+OBCorner.CornerRadius = UDim.new(0.5, 0)
+OBCorner.Parent = OpenBtnFM
+
 -- Selection info
 local SelInfo = Instance.new("TextLabel")
-SelInfo.Size = UDim2.new(0.25, 0, 0.045, 0)
-SelInfo.Position = UDim2.new(0.38, 0, 0.065, 0)
+SelInfo.Size = UDim2.new(0.15, -5, 1, 0)
+SelInfo.Position = UDim2.new(0.85, 0, 0, 0)
 SelInfo.BackgroundTransparency = 1
-SelInfo.Text = "0 files selected"
+SelInfo.Text = "0 selected"
 SelInfo.TextColor3 = Color3.fromRGB(180, 180, 200)
 SelInfo.Font = Enum.Font.Gotham
-SelInfo.TextSize = 13
-SelInfo.TextXAlignment = Enum.TextXAlignment.Left
-SelInfo.Parent = FileViewer
+SelInfo.TextSize = 12
+SelInfo.TextXAlignment = Enum.TextXAlignment.Right
+SelInfo.Parent = FMBar
 
--- File actions
-local FileActionsBar = Instance.new("Frame")
-FileActionsBar.Size = UDim2.new(0.35, -10, 0.045, 0)
-FileActionsBar.Position = UDim2.new(0.65, 0, 0.065, 0)
-FileActionsBar.BackgroundTransparency = 1
-FileActionsBar.Parent = FileViewer
-
-local RefreshFilesBtn = Instance.new("TextButton")
-RefreshFilesBtn.Size = UDim2.new(0.25, -5, 1, 0)
-RefreshFilesBtn.Position = UDim2.new(0, 0, 0, 0)
-RefreshFilesBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 80)
-RefreshFilesBtn.BorderSizePixel = 0
-RefreshFilesBtn.Text = "🔄"
-RefreshFilesBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-RefreshFilesBtn.Font = Enum.Font.GothamBold
-RefreshFilesBtn.TextSize = 18
-RefreshFilesBtn.Parent = FileActionsBar
-local RFBCorner = Instance.new("UICorner")
-RFBCorner.CornerRadius = UDim.new(0.5, 0)
-RFBCorner.Parent = RefreshFilesBtn
-
-local DeleteFilesBtn = Instance.new("TextButton")
-DeleteFilesBtn.Size = UDim2.new(0.25, -5, 1, 0)
-DeleteFilesBtn.Position = UDim2.new(0.27, 0, 0, 0)
-DeleteFilesBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
-DeleteFilesBtn.BorderSizePixel = 0
-DeleteFilesBtn.Text = "🗑️"
-DeleteFilesBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-DeleteFilesBtn.Font = Enum.Font.GothamBold
-DeleteFilesBtn.TextSize = 16
-DeleteFilesBtn.Parent = FileActionsBar
-local DFBCorner = Instance.new("UICorner")
-DFBCorner.CornerRadius = UDim.new(0.5, 0)
-DFBCorner.Parent = DeleteFilesBtn
-
-local EditFileBtn = Instance.new("TextButton")
-EditFileBtn.Size = UDim2.new(0.25, -5, 1, 0)
-EditFileBtn.Position = UDim2.new(0.54, 0, 0, 0)
-EditFileBtn.BackgroundColor3 = Color3.fromRGB(60, 120, 180)
-EditFileBtn.BorderSizePixel = 0
-EditFileBtn.Text = "✏️"
-EditFileBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-EditFileBtn.Font = Enum.Font.GothamBold
-EditFileBtn.TextSize = 16
-EditFileBtn.Parent = FileActionsBar
-local EFBCorner = Instance.new("UICorner")
-EFBCorner.CornerRadius = UDim.new(0.5, 0)
-EFBCorner.Parent = EditFileBtn
-
-local OpenFileBtn = Instance.new("TextButton")
-OpenFileBtn.Size = UDim2.new(0.25, -5, 1, 0)
-OpenFileBtn.Position = UDim2.new(0.81, 0, 0, 0)
-OpenFileBtn.BackgroundColor3 = Color3.fromRGB(60, 180, 80)
-OpenFileBtn.BorderSizePixel = 0
-OpenFileBtn.Text = "📂"
-OpenFileBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-OpenFileBtn.Font = Enum.Font.GothamBold
-OpenFileBtn.TextSize = 16
-OpenFileBtn.Parent = FileActionsBar
-local OFBCorner = Instance.new("UICorner")
-OFBCorner.CornerRadius = UDim.new(0.5, 0)
-OFBCorner.Parent = OpenFileBtn
-
--- File list (left panel)
+-- File list (left)
 local FileListPanel = Instance.new("Frame")
-FileListPanel.Size = UDim2.new(0.35, -10, 1, -0.125)
-FileListPanel.Position = UDim2.new(0, 10, 0.115, 0)
+FileListPanel.Size = UDim2.new(0.35, -10, 1, -0.14)
+FileListPanel.Position = UDim2.new(0, 10, 0.14, 0)
 FileListPanel.BackgroundColor3 = Color3.fromRGB(22, 22, 35)
 FileListPanel.BorderSizePixel = 0
 FileListPanel.Parent = FileViewer
@@ -531,10 +542,10 @@ local FileListLayout = Instance.new("UIListLayout")
 FileListLayout.Padding = UDim.new(0, 2)
 FileListLayout.Parent = FileListScroll
 
--- File content (right panel)
+-- File content (right)
 local FileContentPanel = Instance.new("Frame")
-FileContentPanel.Size = UDim2.new(0.65, -10, 1, -0.125)
-FileContentPanel.Position = UDim2.new(0.35, 10, 0.115, 0)
+FileContentPanel.Size = UDim2.new(0.65, -10, 1, -0.14)
+FileContentPanel.Position = UDim2.new(0.35, 10, 0.14, 0)
 FileContentPanel.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
 FileContentPanel.BorderSizePixel = 0
 FileContentPanel.Parent = FileViewer
@@ -546,7 +557,7 @@ local FileEditor = Instance.new("TextBox")
 FileEditor.Size = UDim2.new(1, -10, 1, -10)
 FileEditor.Position = UDim2.new(0, 5, 0, 5)
 FileEditor.BackgroundTransparency = 1
-FileEditor.Text = "Select a file to view/edit"
+FileEditor.Text = "Select a file to edit"
 FileEditor.TextColor3 = Color3.fromRGB(180, 180, 200)
 FileEditor.TextWrapped = true
 FileEditor.TextScaled = false
@@ -556,187 +567,138 @@ FileEditor.MultiLine = true
 FileEditor.ClearTextOnFocus = false
 FileEditor.Parent = FileContentPanel
 
--- File data
-local allFiles = {}
-local selectedFiles = {} -- table of file paths
-local currentFile = nil
-local fileButtons = {} -- button -> file path
+-- ========== FILE MANAGEMENT DATA ==========
+local trackedFiles = {}  -- table of {path = string, name = string}
+local selectedFilePaths = {}  -- table of selected paths (for multi-select)
+local currentFilePath = nil
+local fileButtons = {}  -- button -> file path
 
--- ========== FILE MANAGER FUNCTIONS ==========
+-- Track a file (call when exporting or creating new)
+function addTrackedFile(path)
+    local name = path:match("([^/\\]+)$") or path
+    -- Avoid duplicates
+    for _, f in ipairs(trackedFiles) do
+        if f.path == path then return end
+    end
+    table.insert(trackedFiles, {path = path, name = name})
+    refreshFileListDisplay()
+end
 
-function refreshFileList()
+-- Remove a file from tracked list (and delete if possible)
+function removeTrackedFile(path)
+    for i, f in ipairs(trackedFiles) do
+        if f.path == path then
+            table.remove(trackedFiles, i)
+            break
+        end
+    end
+    -- Also remove from selection
+    selectedFilePaths[path] = nil
+    refreshFileListDisplay()
+end
+
+-- Refresh the file list display based on trackedFiles and search
+function refreshFileListDisplay()
     for _, child in ipairs(FileListScroll:GetChildren()) do
         if child:IsA("TextButton") then child:Destroy() end
     end
     fileButtons = {}
-    allFiles = {}
-    selectedFiles = {}
 
-    local success, files = pcall(function()
-        return listfiles()
-    end)
-
-    if not success then
-        local btn = Instance.new("TextButton")
-        btn.Size = UDim2.new(1, 0, 0, 30)
-        btn.BackgroundColor3 = Color3.fromRGB(45, 45, 60)
-        btn.BorderSizePixel = 0
-        btn.Text = "⚠️ No files (writefile unavailable)"
-        btn.TextColor3 = Color3.fromRGB(200, 200, 200)
-        btn.Font = Enum.Font.Gotham
-        btn.TextSize = 13
-        btn.Parent = FileListScroll
-        FileListScroll.CanvasSize = UDim2.new(0, 0, 0, 32)
-        SelInfo.Text = "0 files selected"
-        return
-    end
-
-    -- Filter for our files or show all files
     local search = FileSearch.Text:lower()
-    for _, f in ipairs(files) do
-        local fileName = f:match("([^/\\]+)$") or f
-        if search == "" or fileName:lower():find(search) then
-            table.insert(allFiles, {path = f, name = fileName})
-        end
-    end
+    local visibleCount = 0
+    for _, f in ipairs(trackedFiles) do
+        if search == "" or f.name:lower():find(search) then
+            local btn = Instance.new("TextButton")
+            btn.Size = UDim2.new(1, 0, 0, 28)
+            btn.BackgroundColor3 = selectedFilePaths[f.path] and Color3.fromRGB(70, 100, 140) or Color3.fromRGB(40, 40, 55)
+            btn.BorderSizePixel = 0
+            btn.Text = f.name
+            btn.TextColor3 = Color3.fromRGB(230, 230, 230)
+            btn.TextXAlignment = Enum.TextXAlignment.Left
+            btn.Font = Enum.Font.Gotham
+            btn.TextSize = 12
+            btn.Parent = FileListScroll
+            fileButtons[btn] = f.path
 
-    if #allFiles == 0 then
-        local btn = Instance.new("TextButton")
-        btn.Size = UDim2.new(1, 0, 0, 30)
-        btn.BackgroundColor3 = Color3.fromRGB(45, 45, 60)
-        btn.BorderSizePixel = 0
-        btn.Text = "No files found"
-        btn.TextColor3 = Color3.fromRGB(200, 200, 200)
-        btn.Font = Enum.Font.Gotham
-        btn.TextSize = 13
-        btn.Parent = FileListScroll
-        FileListScroll.CanvasSize = UDim2.new(0, 0, 0, 32)
-        SelInfo.Text = "0 files selected"
-        return
-    end
-
-    table.sort(allFiles, function(a,b) return a.name > b.name end)
-
-    -- Ctrl key state for multi-select
-    local ctrlDown = false
-    local shiftDown = false
-    local lastSelected = nil
-
-    UserInputService.InputBegan:Connect(function(input)
-        if input.KeyCode == Enum.KeyCode.LeftControl or input.KeyCode == Enum.KeyCode.RightControl then
-            ctrlDown = true
-        end
-        if input.KeyCode == Enum.KeyCode.LeftShift or input.KeyCode == Enum.KeyCode.RightShift then
-            shiftDown = true
-        end
-    end)
-    UserInputService.InputEnded:Connect(function(input)
-        if input.KeyCode == Enum.KeyCode.LeftControl or input.KeyCode == Enum.KeyCode.RightControl then
-            ctrlDown = false
-        end
-        if input.KeyCode == Enum.KeyCode.LeftShift or input.KeyCode == Enum.KeyCode.RightShift then
-            shiftDown = false
-        end
-    end)
-
-    for _, fileData in ipairs(allFiles) do
-        local btn = Instance.new("TextButton")
-        btn.Size = UDim2.new(1, 0, 0, 28)
-        btn.BackgroundColor3 = Color3.fromRGB(40, 40, 55)
-        btn.BorderSizePixel = 0
-        btn.Text = fileData.name
-        btn.TextColor3 = Color3.fromRGB(230, 230, 230)
-        btn.TextXAlignment = Enum.TextXAlignment.Left
-        btn.Font = Enum.Font.Gotham
-        btn.TextSize = 12
-        btn.Parent = FileListScroll
-        fileButtons[btn] = fileData.path
-
-        btn.MouseEnter:Connect(function() 
-            if not selectedFiles[fileData.path] then
-                btn.BackgroundColor3 = Color3.fromRGB(55, 55, 75) 
-            end
-        end)
-        btn.MouseLeave:Connect(function() 
-            if not selectedFiles[fileData.path] then
-                btn.BackgroundColor3 = Color3.fromRGB(40, 40, 55)
-            end
-        end)
-
-        -- Click handler with Ctrl/Shift support
-        btn.MouseButton1Click:Connect(function()
-            local path = fileData.path
-            
-            if ctrlDown then
-                -- Toggle selection
-                if selectedFiles[path] then
-                    selectedFiles[path] = nil
+            btn.MouseEnter:Connect(function()
+                if not selectedFilePaths[f.path] then
+                    btn.BackgroundColor3 = Color3.fromRGB(55, 55, 75)
+                end
+            end)
+            btn.MouseLeave:Connect(function()
+                if not selectedFilePaths[f.path] then
                     btn.BackgroundColor3 = Color3.fromRGB(40, 40, 55)
+                end
+            end)
+
+            -- Left click: select (toggle with Ctrl)
+            btn.MouseButton1Click:Connect(function()
+                local ctrlDown = UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) or UserInputService:IsKeyDown(Enum.KeyCode.RightControl)
+                if ctrlDown then
+                    -- Toggle selection
+                    if selectedFilePaths[f.path] then
+                        selectedFilePaths[f.path] = nil
+                        btn.BackgroundColor3 = Color3.fromRGB(40, 40, 55)
+                    else
+                        selectedFilePaths[f.path] = true
+                        btn.BackgroundColor3 = Color3.fromRGB(70, 100, 140)
+                    end
                 else
-                    selectedFiles[path] = true
+                    -- Single select
+                    for _, b in ipairs(FileListScroll:GetChildren()) do
+                        if b:IsA("TextButton") then
+                            b.BackgroundColor3 = Color3.fromRGB(40, 40, 55)
+                        end
+                    end
+                    selectedFilePaths = {}
+                    selectedFilePaths[f.path] = true
                     btn.BackgroundColor3 = Color3.fromRGB(70, 100, 140)
+                    -- Load file for editing
+                    loadFileContent(f.path)
                 end
-                lastSelected = path
-            elseif shiftDown and lastSelected then
-                -- Range select
-                local inRange = false
-                for _, fd in ipairs(allFiles) do
-                    if fd.path == lastSelected or fd.path == path then
-                        inRange = not inRange
-                    end
-                    if inRange then
-                        selectedFiles[fd.path] = true
-                        local b = getButtonForPath(fd.path)
-                        if b then b.BackgroundColor3 = Color3.fromRGB(70, 100, 140) end
-                    end
-                end
-            else
-                -- Single select
-                selectedFiles = {}
+                updateSelectionInfo()
+            end)
+
+            -- Right click: load without selecting
+            btn.MouseButton2Click:Connect(function()
+                loadFileContent(f.path)
+                -- Highlight it temporarily
                 for _, b in ipairs(FileListScroll:GetChildren()) do
                     if b:IsA("TextButton") then
                         b.BackgroundColor3 = Color3.fromRGB(40, 40, 55)
                     end
                 end
-                selectedFiles[path] = true
-                btn.BackgroundColor3 = Color3.fromRGB(70, 100, 140)
-                lastSelected = path
-                -- Load file for editing
-                loadFileForEditing(path)
-            end
-            
-            updateSelectionInfo()
-        end)
+                btn.BackgroundColor3 = Color3.fromRGB(60, 140, 60)
+            end)
 
-        -- Alt+Click: Quick preview
-        btn.MouseButton2Click:Connect(function()
-            local path = fileData.path
-            loadFileForEditing(path)
-            -- Highlight it
-            for _, b in ipairs(FileListScroll:GetChildren()) do
-                if b:IsA("TextButton") then
-                    b.BackgroundColor3 = Color3.fromRGB(40, 40, 55)
-                end
-            end
-            btn.BackgroundColor3 = Color3.fromRGB(60, 140, 60)
-        end)
+            visibleCount = visibleCount + 1
+        end
     end
 
-    FileListScroll.CanvasSize = UDim2.new(0, 0, 0, #allFiles * 30 + 10)
+    if visibleCount == 0 then
+        local emptyMsg = Instance.new("TextLabel")
+        emptyMsg.Size = UDim2.new(1, 0, 0, 30)
+        emptyMsg.BackgroundTransparency = 1
+        emptyMsg.Text = (search == "" and "No files tracked yet. Export something first!" or "No files match search")
+        emptyMsg.TextColor3 = Color3.fromRGB(150, 150, 170)
+        emptyMsg.Font = Enum.Font.Gotham
+        emptyMsg.TextSize = 13
+        emptyMsg.Parent = FileListScroll
+        visibleCount = 1 -- for canvas
+    end
+
+    FileListScroll.CanvasSize = UDim2.new(0, 0, 0, visibleCount * 30 + 10)
     updateSelectionInfo()
 end
 
-function getButtonForPath(path)
-    for btn, pth in pairs(fileButtons) do
-        if pth == path then
-            return btn
-        end
-    end
-    return nil
+function updateSelectionInfo()
+    local count = 0
+    for _ in pairs(selectedFilePaths) do count = count + 1 end
+    SelInfo.Text = count .. " selected"
 end
 
-function loadFileForEditing(path)
-    currentFile = path
+function loadFileContent(path)
+    currentFilePath = path
     local success, content = pcall(function()
         return readfile(path)
     end)
@@ -749,66 +711,55 @@ function loadFileForEditing(path)
     end
 end
 
-function updateSelectionInfo()
-    local count = 0
-    for _ in pairs(selectedFiles) do count = count + 1 end
-    SelInfo.Text = count .. " file" .. (count ~= 1 and "s" or "") .. " selected"
-end
-
--- Save file
 function saveCurrentFile()
-    if not currentFile then
-        print("No file selected")
+    if not currentFilePath then
+        print("No file open")
         return
     end
-    local success, err = pcall(function()
-        writefile(currentFile, FileEditor.Text)
+    local success = pcall(function()
+        writefile(currentFilePath, FileEditor.Text)
     end)
     if success then
-        print("💾 File saved: " .. currentFile)
-        EditFileBtn.Text = "✅"
-        task.wait(0.8)
-        EditFileBtn.Text = "✏️"
+        print("💾 Saved: " .. currentFilePath)
+        SaveBtnFM.Text = "✅"
+        task.wait(1)
+        SaveBtnFM.Text = "💾"
     else
-        print("❌ Error saving: " .. tostring(err))
-        EditFileBtn.Text = "❌"
-        task.wait(0.8)
-        EditFileBtn.Text = "✏️"
+        print("❌ Save failed")
+        SaveBtnFM.Text = "❌"
+        task.wait(1)
+        SaveBtnFM.Text = "💾"
     end
 end
 
--- Delete selected files
 function deleteSelectedFiles()
-    local count = 0
-    for path in pairs(selectedFiles) do
-        count = count + 1
+    local paths = {}
+    for p in pairs(selectedFilePaths) do
+        table.insert(paths, p)
     end
-    if count == 0 then
+    if #paths == 0 then
         print("No files selected")
         return
     end
-    
-    -- Confirm deletion
+    -- Confirm dialog
     local confirm = Instance.new("Frame")
-    confirm.Size = UDim2.new(0.3, 0, 0.15, 0)
-    confirm.Position = UDim2.new(0.35, 0, 0.4, 0)
+    confirm.Size = UDim2.new(0.25, 0, 0.12, 0)
+    confirm.Position = UDim2.new(0.375, 0, 0.4, 0)
     confirm.BackgroundColor3 = Color3.fromRGB(30, 30, 50)
     confirm.BorderSizePixel = 0
     confirm.Parent = FileViewer
     local confirmCorner = Instance.new("UICorner")
     confirmCorner.CornerRadius = UDim.new(0.02, 0)
     confirmCorner.Parent = confirm
-    
     local msg = Instance.new("TextLabel")
     msg.Size = UDim2.new(1, 0, 0.4, 0)
     msg.Position = UDim2.new(0, 0, 0.1, 0)
     msg.BackgroundTransparency = 1
-    msg.Text = "Delete " .. count .. " file(s)?"
+    msg.Text = "Delete " .. #paths .. " file(s)?"
     msg.TextColor3 = Color3.fromRGB(255, 255, 255)
     msg.Font = Enum.Font.GothamBold
-    msg.TextSize = 16
+    msg.TextSize = 14
     msg.Parent = confirm
-    
     local yesBtn = Instance.new("TextButton")
     yesBtn.Size = UDim2.new(0.3, 0, 0.3, 0)
     yesBtn.Position = UDim2.new(0.1, 0, 0.55, 0)
@@ -817,12 +768,11 @@ function deleteSelectedFiles()
     yesBtn.Text = "Yes"
     yesBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
     yesBtn.Font = Enum.Font.GothamBold
-    yesBtn.TextSize = 16
+    yesBtn.TextSize = 14
     yesBtn.Parent = confirm
     local yCorner = Instance.new("UICorner")
     yCorner.CornerRadius = UDim.new(0.5, 0)
     yCorner.Parent = yesBtn
-    
     local noBtn = Instance.new("TextButton")
     noBtn.Size = UDim2.new(0.3, 0, 0.3, 0)
     noBtn.Position = UDim2.new(0.6, 0, 0.55, 0)
@@ -831,90 +781,101 @@ function deleteSelectedFiles()
     noBtn.Text = "No"
     noBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
     noBtn.Font = Enum.Font.GothamBold
-    noBtn.TextSize = 16
+    noBtn.TextSize = 14
     noBtn.Parent = confirm
     local nCorner = Instance.new("UICorner")
     nCorner.CornerRadius = UDim.new(0.5, 0)
     nCorner.Parent = noBtn
-    
     yesBtn.MouseButton1Click:Connect(function()
-        for path in pairs(selectedFiles) do
+        for _, p in ipairs(paths) do
             pcall(function()
-                delfile(path)
+                delfile(p)
             end)
+            removeTrackedFile(p)
         end
         confirm:Destroy()
-        refreshFileList()
-        FileEditor.Text = "Select a file to view/edit"
-        currentFile = nil
-        print("🗑️ Deleted " .. count .. " files")
+        print("🗑️ Deleted " .. #paths .. " files")
+        refreshFileListDisplay()
+        FileEditor.Text = "Select a file to edit"
+        currentFilePath = nil
     end)
-    
     noBtn.MouseButton1Click:Connect(function()
         confirm:Destroy()
     end)
 end
 
--- Open file externally (if possible)
 function openFileExternally()
-    if not currentFile then
-        print("No file selected")
+    if not currentFilePath then
+        print("No file open")
         return
     end
     pcall(function()
-        -- Try to open with default program
-        os.execute('start "" "' .. currentFile .. '"')
-        print("📂 Opening: " .. currentFile)
+        os.execute('start "" "' .. currentFilePath .. '"')
     end)
 end
+
+-- Create new file
+function createNewFile()
+    local newName = "newfile_" .. os.date("%H%M%S") .. ".txt"
+    local path = newName
+    -- Try to write empty file
+    local success = pcall(function()
+        writefile(path, "")
+    end)
+    if success then
+        addTrackedFile(path)
+        -- Select and load it
+        selectedFilePaths = {}
+        selectedFilePaths[path] = true
+        loadFileContent(path)
+        refreshFileListDisplay()
+        print("📄 Created new file: " .. path)
+    else
+        print("❌ Failed to create file")
+    end
+end
+
+-- Button connections
+NewFileBtn.MouseButton1Click:Connect(createNewFile)
+RefreshBtnFM.MouseButton1Click:Connect(refreshFileListDisplay)
+SaveBtnFM.MouseButton1Click:Connect(saveCurrentFile)
+OpenBtnFM.MouseButton1Click:Connect(openFileExternally)
+DelBtnFM.MouseButton1Click:Connect(deleteSelectedFiles)
+
+-- File search filter
+FileSearch:GetPropertyChangedSignal("Text"):Connect(refreshFileListDisplay)
 
 -- Keyboard shortcuts in File Viewer
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if gameProcessed then return end
     if not FileViewer.Visible then return end
-    
-    -- X = Edit (save)
     if input.KeyCode == Enum.KeyCode.X then
         saveCurrentFile()
     end
-    
-    -- Delete = Delete selected files
     if input.KeyCode == Enum.KeyCode.Delete then
         deleteSelectedFiles()
     end
-    
-    -- Ctrl+A = Select all
-    if input.KeyCode == Enum.KeyCode.A and UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then
-        for _, fd in ipairs(allFiles) do
-            selectedFiles[fd.path] = true
-            local b = getButtonForPath(fd.path)
-            if b then b.BackgroundColor3 = Color3.fromRGB(70, 100, 140) end
+    if input.KeyCode == Enum.KeyCode.A and (UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) or UserInputService:IsKeyDown(Enum.KeyCode.RightControl)) then
+        -- Select all
+        for _, f in ipairs(trackedFiles) do
+            selectedFilePaths[f.path] = true
         end
-        updateSelectionInfo()
+        refreshFileListDisplay()
     end
 end)
 
--- Button handlers
-RefreshFilesBtn.MouseButton1Click:Connect(refreshFileList)
-EditFileBtn.MouseButton1Click:Connect(saveCurrentFile)
-OpenFileBtn.MouseButton1Click:Connect(openFileExternally)
-DeleteFilesBtn.MouseButton1Click:Connect(deleteSelectedFiles)
-
--- File search
-FileSearch:GetPropertyChangedSignal("Text"):Connect(refreshFileList)
-
--- View Files button
+-- View Files toggle
 ViewFilesBtn.MouseButton1Click:Connect(function()
     FileViewer.Visible = not FileViewer.Visible
     if FileViewer.Visible then
         ViewFilesBtn.Text = "📂 Close Files"
-        refreshFileList()
+        refreshFileListDisplay()
     else
         ViewFilesBtn.Text = "📂 Files"
     end
 end)
 
--- Scrolling list (main results)
+-- ========== Scrolling list (main results) ==========
 local ListFrame = Instance.new("ScrollingFrame")
 ListFrame.Size = UDim2.new(1, 0, 1, -0.14)
 ListFrame.Position = UDim2.new(0, 0, 0.14, 0)
@@ -931,7 +892,7 @@ local ListLayout = Instance.new("UIListLayout")
 ListLayout.Padding = UDim.new(0, 2)
 ListLayout.Parent = ListFrame
 
--- Fire Dialog (popup)
+-- ========== Fire Dialog ==========
 local FireDialog = Instance.new("Frame")
 FireDialog.Size = UDim2.new(0.7, 0, 0.5, 0)
 FireDialog.Position = UDim2.new(0.15, 0, 0.25, 0)
@@ -1310,7 +1271,7 @@ FireBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- ========== EXPORT FUNCTIONS ==========
+-- ========== EXPORT FUNCTIONS (with file tracking) ==========
 function exportResults(format)
     if #results == 0 then
         print("No results to export")
@@ -1359,12 +1320,15 @@ function exportResults(format)
         filename = "KeywordSearch_Results_" .. timestamp .. ".json"
     end
 
+    -- Write file and track it
     local success = pcall(function()
         writefile(filename, text)
     end)
 
     if success then
         print("📄 Exported to: " .. filename)
+        -- Add to tracked files
+        addTrackedFile(filename)
         ExportBtn.Text = "✅"
         task.wait(1)
         ExportBtn.Text = "📄 Export"
@@ -1396,11 +1360,6 @@ end)
 
 -- ========== LAUNCH ==========
 startScan()
-print("✅ Professional Keyword Search v6.0 – Press Right Shift to toggle")
-print("🔥 Left-click to fire, Right-click to copy/inspect")
-print("📂 Click 'Files' for full file manager:")
-print("   • Ctrl+Click: Select multiple files")
-print("   • Alt+Click: Quick preview")
-print("   • X: Save current file")
-print("   • Delete: Remove selected files")
-print("   • Ctrl+A: Select all files")
+print("✅ Keyword Search v7.0 – Press Right Shift to toggle")
+print("🔥 Left-click to fire, Right-click to copy")
+print("📂 Click 'Files' – files you export will appear. Use Ctrl+Click to multi-select, X to save, Delete to remove.")
