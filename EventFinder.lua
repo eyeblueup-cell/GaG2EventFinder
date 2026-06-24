@@ -1,5 +1,5 @@
 --[[
-    PROFESSIONAL KEYWORD SEARCH v7.2 – WORKING FILE MANAGER (scrollable + loads all files)
+    PROFESSIONAL KEYWORD SEARCH v7.3 – FIXED listfiles() + SCROLLABLE FILE MANAGER
 ]]
 
 local player = game.Players.LocalPlayer
@@ -359,7 +359,7 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
     end
 end)
 
--- ========== FILE MANAGER (now with scrollable list) ==========
+-- ========== FILE MANAGER ==========
 local FileViewer = Instance.new("Frame")
 FileViewer.Size = UDim2.new(0.85, 0, 0.8, 0)
 FileViewer.Position = UDim2.new(0.075, 0, 0.1, 0)
@@ -528,7 +528,7 @@ SelInfo.TextSize = 12
 SelInfo.TextXAlignment = Enum.TextXAlignment.Right
 SelInfo.Parent = FMBar
 
--- File list (left) - now scrollable
+-- File list (left) - scrollable
 local FileListPanel = Instance.new("Frame")
 FileListPanel.Size = UDim2.new(0.35, -10, 1, -0.14)
 FileListPanel.Position = UDim2.new(0, 10, 0.14, 0)
@@ -584,21 +584,34 @@ local selectedFilePaths = {}
 local currentFilePath = nil
 local fileButtons = {}
 
--- Refresh from filesystem using listfiles()
+-- Try multiple arguments for listfiles
+local function getFileList()
+    local attempts = {"", ".", "/", "\\"}
+    for _, arg in ipairs(attempts) do
+        local success, result = pcall(listfiles, arg)
+        if success and type(result) == "table" then
+            return result
+        end
+    end
+    return nil
+end
+
+-- Refresh from filesystem using listfiles() with fallback
 function refreshFromFilesystem()
-    local success, files = pcall(listfiles)
-    if not success then
-        print("❌ listfiles() failed: " .. tostring(files))
-        -- Show error in file manager title
-        FVFileCount.Text = "⚠️ listfiles error"
-        return
+    local files = getFileList()
+    if files then
+        trackedFiles = {}
+        for _, path in ipairs(files) do
+            local name = path:match("([^/\\]+)$") or path
+            table.insert(trackedFiles, {path = path, name = name})
+        end
+        FVFileCount.Text = #trackedFiles .. " files"
+    else
+        -- If listfiles fails, keep existing tracked files (from exports/creates)
+        -- and show a message
+        FVFileCount.Text = #trackedFiles .. " files (listfiles unavailable)"
+        print("⚠️ listfiles() failed – only tracking newly created/exported files")
     end
-    trackedFiles = {}
-    for _, path in ipairs(files) do
-        local name = path:match("([^/\\]+)$") or path
-        table.insert(trackedFiles, {path = path, name = name})
-    end
-    FVFileCount.Text = #trackedFiles .. " files"
     refreshFileListDisplay()
 end
 
@@ -628,7 +641,6 @@ end
 
 -- Refresh the file list display (scrollable)
 function refreshFileListDisplay()
-    -- Clear existing buttons
     for _, child in ipairs(FileListScroll:GetChildren()) do
         if child:IsA("TextButton") then child:Destroy() end
     end
@@ -701,7 +713,6 @@ function refreshFileListDisplay()
         end
     end
 
-    -- If nothing found, show message
     if visibleCount == 0 then
         local emptyMsg = Instance.new("TextLabel")
         emptyMsg.Size = UDim2.new(1, 0, 0, 30)
@@ -714,7 +725,6 @@ function refreshFileListDisplay()
         visibleCount = 1
     end
 
-    -- Update canvas size for scrolling (30px per item + padding)
     FileListScroll.CanvasSize = UDim2.new(0, 0, 0, visibleCount * 30 + 10)
     updateSelectionInfo()
 end
@@ -822,7 +832,7 @@ function deleteSelectedFiles()
         end
         confirm:Destroy()
         print("🗑️ Deleted " .. #paths .. " files")
-        refreshFromFilesystem()  -- rescan to update list
+        refreshFromFilesystem()
         FileEditor.Text = "Select a file to edit"
         currentFilePath = nil
     end)
@@ -892,7 +902,7 @@ ViewFilesBtn.MouseButton1Click:Connect(function()
     FileViewer.Visible = not FileViewer.Visible
     if FileViewer.Visible then
         ViewFilesBtn.Text = "📂 Close Files"
-        refreshFileListDisplay()  -- refresh when opened
+        refreshFileListDisplay()
     else
         ViewFilesBtn.Text = "📂 Files"
     end
@@ -1378,12 +1388,12 @@ CopyAllBtn.MouseButton1Click:Connect(function()
 end)
 
 -- ========== LAUNCH ==========
--- First, populate file manager with all files
+-- First, populate file manager
 refreshFromFilesystem()
 
 -- Start the keyword scan
 startScan()
 
-print("✅ Keyword Search v7.2 – Press Right Shift to toggle")
+print("✅ Keyword Search v7.3 – Press Right Shift to toggle")
 print("🔥 Left-click to fire, Right-click to copy")
-print("📂 Click 'Files' – all files in current directory are shown. Scroll to browse.")
+print("📂 Click 'Files' – files will be listed (if listfiles works) or you can create/export new ones.")
