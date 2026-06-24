@@ -1,5 +1,7 @@
 --[[
-    PROFESSIONAL KEYWORD SEARCH v7.3 – FIXED listfiles() + SCROLLABLE FILE MANAGER
+    PROFESSIONAL KEYWORD SEARCH v8.0 – SCRIPT VIEWER + FILE MANAGER
+    - View & edit Script/LocalScript/ModuleScript source from search results
+    - Save scripts as .lua files
 ]]
 
 local player = game.Players.LocalPlayer
@@ -578,6 +580,151 @@ FileEditor.MultiLine = true
 FileEditor.ClearTextOnFocus = false
 FileEditor.Parent = FileContentPanel
 
+-- ========== SCRIPT VIEWER (NEW) ==========
+local ScriptViewer = Instance.new("Frame")
+ScriptViewer.Size = UDim2.new(0.85, 0, 0.75, 0)
+ScriptViewer.Position = UDim2.new(0.075, 0, 0.12, 0)
+ScriptViewer.BackgroundColor3 = Color3.fromRGB(30, 30, 50)
+ScriptViewer.BorderSizePixel = 0
+ScriptViewer.Visible = false
+ScriptViewer.Parent = MainFrame
+local SVCorner = Instance.new("UICorner")
+SVCorner.CornerRadius = UDim.new(0.015, 0)
+SVCorner.Parent = ScriptViewer
+
+-- Title bar
+local SVTitle = Instance.new("Frame")
+SVTitle.Size = UDim2.new(1, 0, 0.06, 0)
+SVTitle.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
+SVTitle.BorderSizePixel = 0
+SVTitle.Parent = ScriptViewer
+local SVTitleCorner = Instance.new("UICorner")
+SVTitleCorner.CornerRadius = UDim.new(0.015, 0)
+SVTitleCorner.Parent = SVTitle
+
+local SVTitleLabel = Instance.new("TextLabel")
+SVTitleLabel.Size = UDim2.new(0.7, 0, 1, 0)
+SVTitleLabel.Position = UDim2.new(0.02, 0, 0, 0)
+SVTitleLabel.BackgroundTransparency = 1
+SVTitleLabel.Text = "📄 Script Viewer"
+SVTitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+SVTitleLabel.Font = Enum.Font.GothamBold
+SVTitleLabel.TextSize = 16
+SVTitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+SVTitleLabel.Parent = SVTitle
+
+local SVCloseBtn = Instance.new("TextButton")
+SVCloseBtn.Size = UDim2.new(0.045, 0, 1, 0)
+SVCloseBtn.Position = UDim2.new(0.955, 0, 0, 0)
+SVCloseBtn.Text = "✕"
+SVCloseBtn.TextSize = 17
+SVCloseBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
+SVCloseBtn.BackgroundTransparency = 1
+SVCloseBtn.Font = Enum.Font.GothamBold
+SVCloseBtn.Parent = SVTitle
+SVCloseBtn.MouseButton1Click:Connect(function()
+    ScriptViewer.Visible = false
+end)
+
+-- Source editor
+local SVEditor = Instance.new("TextBox")
+SVEditor.Size = UDim2.new(1, -20, 1, -0.2)
+SVEditor.Position = UDim2.new(0, 10, 0.07, 0)
+SVEditor.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+SVEditor.BorderSizePixel = 0
+SVEditor.Text = ""
+SVEditor.TextColor3 = Color3.fromRGB(230, 230, 230)
+SVEditor.TextWrapped = true
+SVEditor.Font = Enum.Font.Code
+SVEditor.TextSize = 12
+SVEditor.MultiLine = true
+SVEditor.ClearTextOnFocus = false
+SVEditor.Parent = ScriptViewer
+local SVEditorCorner = Instance.new("UICorner")
+SVEditorCorner.CornerRadius = UDim.new(0.01, 0)
+SVEditorCorner.Parent = SVEditor
+
+-- Buttons
+local SVSaveBtn = Instance.new("TextButton")
+SVSaveBtn.Size = UDim2.new(0.15, 0, 0.07, 0)
+SVSaveBtn.Position = UDim2.new(0.05, 0, 0.88, 0)
+SVSaveBtn.BackgroundColor3 = Color3.fromRGB(60, 180, 80)
+SVSaveBtn.BorderSizePixel = 0
+SVSaveBtn.Text = "💾 Save as File"
+SVSaveBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+SVSaveBtn.Font = Enum.Font.GothamBold
+SVSaveBtn.TextSize = 13
+SVSaveBtn.Parent = ScriptViewer
+local SVSaveCorner = Instance.new("UICorner")
+SVSaveCorner.CornerRadius = UDim.new(0.5, 0)
+SVSaveCorner.Parent = SVSaveBtn
+
+local SVCancelBtn = Instance.new("TextButton")
+SVCancelBtn.Size = UDim2.new(0.15, 0, 0.07, 0)
+SVCancelBtn.Position = UDim2.new(0.8, 0, 0.88, 0)
+SVCancelBtn.BackgroundColor3 = Color3.fromRGB(180, 60, 60)
+SVCancelBtn.BorderSizePixel = 0
+SVCancelBtn.Text = "Cancel"
+SVCancelBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+SVCancelBtn.Font = Enum.Font.GothamBold
+SVCancelBtn.TextSize = 13
+SVCancelBtn.Parent = ScriptViewer
+local SVCancelCorner = Instance.new("UICorner")
+SVCancelCorner.CornerRadius = UDim.new(0.5, 0)
+SVCancelCorner.Parent = SVCancelBtn
+
+local SVCopyBtn = Instance.new("TextButton")
+SVCopyBtn.Size = UDim2.new(0.15, 0, 0.07, 0)
+SVCopyBtn.Position = UDim2.new(0.25, 0, 0.88, 0)
+SVCopyBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 100)
+SVCopyBtn.BorderSizePixel = 0
+SVCopyBtn.Text = "📋 Copy"
+SVCopyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+SVCopyBtn.Font = Enum.Font.GothamBold
+SVCopyBtn.TextSize = 13
+SVCopyBtn.Parent = ScriptViewer
+local SVCopyCorner = Instance.new("UICorner")
+SVCopyCorner.CornerRadius = UDim.new(0.5, 0)
+SVCopyCorner.Parent = SVCopyBtn
+
+local currentScriptObject = nil
+
+SVSaveBtn.MouseButton1Click:Connect(function()
+    if not currentScriptObject then return end
+    local name = currentScriptObject.Name
+    if name == "" then name = "script" end
+    local filename = name .. "_" .. os.date("%H%M%S") .. ".lua"
+    local content = SVEditor.Text
+    local success = pcall(function()
+        writefile(filename, content)
+    end)
+    if success then
+        addTrackedFile(filename)
+        print("💾 Saved script to: " .. filename)
+        SVSaveBtn.Text = "✅ Saved"
+        task.wait(1)
+        SVSaveBtn.Text = "💾 Save as File"
+        ScriptViewer.Visible = false
+    else
+        print("❌ Failed to save script")
+        SVSaveBtn.Text = "❌ Error"
+        task.wait(1)
+        SVSaveBtn.Text = "💾 Save as File"
+    end
+end)
+
+SVCopyBtn.MouseButton1Click:Connect(function()
+    setclipboard(SVEditor.Text)
+    print("📋 Script source copied to clipboard")
+    SVCopyBtn.Text = "✅ Copied"
+    task.wait(1)
+    SVCopyBtn.Text = "📋 Copy"
+end)
+
+SVCancelBtn.MouseButton1Click:Connect(function()
+    ScriptViewer.Visible = false
+end)
+
 -- ========== FILE MANAGEMENT DATA ==========
 local trackedFiles = {}
 local selectedFilePaths = {}
@@ -596,7 +743,6 @@ local function getFileList()
     return nil
 end
 
--- Refresh from filesystem using listfiles() with fallback
 function refreshFromFilesystem()
     local files = getFileList()
     if files then
@@ -607,15 +753,12 @@ function refreshFromFilesystem()
         end
         FVFileCount.Text = #trackedFiles .. " files"
     else
-        -- If listfiles fails, keep existing tracked files (from exports/creates)
-        -- and show a message
         FVFileCount.Text = #trackedFiles .. " files (listfiles unavailable)"
         print("⚠️ listfiles() failed – only tracking newly created/exported files")
     end
     refreshFileListDisplay()
 end
 
--- Add a file (for exports / new files)
 function addTrackedFile(path)
     local name = path:match("([^/\\]+)$") or path
     for _, f in ipairs(trackedFiles) do
@@ -626,7 +769,6 @@ function addTrackedFile(path)
     refreshFileListDisplay()
 end
 
--- Remove a file
 function removeTrackedFile(path)
     for i, f in ipairs(trackedFiles) do
         if f.path == path then
@@ -639,7 +781,6 @@ function removeTrackedFile(path)
     refreshFileListDisplay()
 end
 
--- Refresh the file list display (scrollable)
 function refreshFileListDisplay()
     for _, child in ipairs(FileListScroll:GetChildren()) do
         if child:IsA("TextButton") then child:Destroy() end
@@ -876,10 +1017,8 @@ SaveBtnFM.MouseButton1Click:Connect(saveCurrentFile)
 OpenBtnFM.MouseButton1Click:Connect(openFileExternally)
 DelBtnFM.MouseButton1Click:Connect(deleteSelectedFiles)
 
--- File search filter
 FileSearch:GetPropertyChangedSignal("Text"):Connect(refreshFileListDisplay)
 
--- Keyboard shortcuts in File Viewer
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if gameProcessed then return end
     if not FileViewer.Visible then return end
@@ -897,7 +1036,6 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
     end
 end)
 
--- View Files toggle
 ViewFilesBtn.MouseButton1Click:Connect(function()
     FileViewer.Visible = not FileViewer.Visible
     if FileViewer.Visible then
@@ -925,7 +1063,7 @@ local ListLayout = Instance.new("UIListLayout")
 ListLayout.Padding = UDim.new(0, 2)
 ListLayout.Parent = ListFrame
 
--- ========== Fire Dialog ==========
+-- ========== Fire Dialog (for non‑script events) ==========
 local FireDialog = Instance.new("Frame")
 FireDialog.Size = UDim2.new(0.7, 0, 0.5, 0)
 FireDialog.Position = UDim2.new(0.15, 0, 0.25, 0)
@@ -1064,6 +1202,14 @@ local function checkInstance(inst)
             return
         end
     end
+    -- Also check script source
+    if inst:IsA("Script") or inst:IsA("LocalScript") or inst:IsA("ModuleScript") then
+        local ok, source = pcall(function() return inst.Source end)
+        if ok and type(source) == "string" and matchesAny(source) then
+            table.insert(results, inst)
+            return
+        end
+    end
     local attrs = inst:GetAttributes()
     for key, val in pairs(attrs) do
         if (type(key) == "string" and matchesAny(key)) or (type(val) == "string" and matchesAny(val)) then
@@ -1161,7 +1307,13 @@ function populateResults()
                 end
             end
             btn.BackgroundColor3 = Color3.fromRGB(70, 100, 140)
-            showFireDialog(inst)
+
+            -- Check if it's a script
+            if inst:IsA("Script") or inst:IsA("LocalScript") or inst:IsA("ModuleScript") then
+                showScriptViewer(inst)
+            else
+                showFireDialog(inst)
+            end
         end)
 
         btn.MouseButton2Click:Connect(function()
@@ -1199,8 +1351,25 @@ function populateResults()
     end)
 end
 
--- Fire Dialog functions
-local function showFireDialog(inst)
+-- ========== Script Viewer Function ==========
+function showScriptViewer(scriptObj)
+    currentScriptObject = scriptObj
+    SVTitleLabel.Text = "📄 Script: " .. scriptObj.Name
+    local ok, source = pcall(function()
+        return scriptObj.Source
+    end)
+    if ok and source then
+        SVEditor.Text = source
+        SVEditor.TextColor3 = Color3.fromRGB(230, 230, 230)
+    else
+        SVEditor.Text = "⚠️ Could not read script source.\nError: " .. tostring(source)
+        SVEditor.TextColor3 = Color3.fromRGB(255, 150, 150)
+    end
+    ScriptViewer.Visible = true
+end
+
+-- ========== Fire Dialog Functions ==========
+function showFireDialog(inst)
     FireDialog.Visible = true
     EventPathLabel.Text = "Event: " .. inst:GetFullName()
     ParamBox.Text = ""
@@ -1302,7 +1471,7 @@ FireBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- ========== EXPORT FUNCTIONS (with file tracking) ==========
+-- ========== EXPORT FUNCTIONS ==========
 function exportResults(format)
     if #results == 0 then
         print("No results to export")
@@ -1388,12 +1557,9 @@ CopyAllBtn.MouseButton1Click:Connect(function()
 end)
 
 -- ========== LAUNCH ==========
--- First, populate file manager
 refreshFromFilesystem()
-
--- Start the keyword scan
 startScan()
 
-print("✅ Keyword Search v7.3 – Press Right Shift to toggle")
-print("🔥 Left-click to fire, Right-click to copy")
-print("📂 Click 'Files' – files will be listed (if listfiles works) or you can create/export new ones.")
+print("✅ Keyword Search v8.0 – Press Right Shift to toggle")
+print("🔥 Left-click: if script → view source; if event → fire")
+print("📂 Click 'Files' to manage saved files.")
