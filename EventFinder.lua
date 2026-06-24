@@ -1,8 +1,9 @@
 --[[
-    PROFESSIONAL KEYWORD SEARCH v7.0 – WORKING FILE MANAGER
-    - Tracks files you export (no listfiles() required)
-    - Create new files, load files by name, edit, save, delete
-    - Full keyboard shortcuts: X=Save, Delete=Delete, Ctrl+A=Select all
+    PROFESSIONAL KEYWORD SEARCH v7.1 – WORKING FILE MANAGER (with listfiles)
+    - Now shows ALL files in the current directory on startup
+    - Track new files automatically on export/create
+    - Refresh button rescans the folder
+    - View/edit any file
 ]]
 
 local player = game.Players.LocalPlayer
@@ -130,7 +131,7 @@ Content.Position = UDim2.new(0, 8, 0.075, 0)
 Content.BackgroundTransparency = 1
 Content.Parent = MainFrame
 
--- Progress View (unchanged, omitted for brevity – but keep all)
+-- Progress View
 local ProgressView = Instance.new("Frame")
 ProgressView.Size = UDim2.new(1, 0, 1, 0)
 ProgressView.BackgroundTransparency = 1
@@ -362,7 +363,8 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
     end
 end)
 
--- ========== FILE MANAGER – NO listfiles() REQUIRED ==========
+-- ========== FILE MANAGER ==========
+-- Now uses listfiles() to show ALL files in the current directory
 local FileViewer = Instance.new("Frame")
 FileViewer.Size = UDim2.new(0.85, 0, 0.8, 0)
 FileViewer.Position = UDim2.new(0.075, 0, 0.1, 0)
@@ -388,7 +390,7 @@ local FVTitleLabel = Instance.new("TextLabel")
 FVTitleLabel.Size = UDim2.new(0.6, 0, 1, 0)
 FVTitleLabel.Position = UDim2.new(0.02, 0, 0, 0)
 FVTitleLabel.BackgroundTransparency = 1
-FVTitleLabel.Text = "📂 File Manager"
+FVTitleLabel.Text = "📂 File Manager (all files)"
 FVTitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 FVTitleLabel.Font = Enum.Font.GothamBold
 FVTitleLabel.TextSize = 16
@@ -448,7 +450,7 @@ local NFCorner = Instance.new("UICorner")
 NFCorner.CornerRadius = UDim.new(0.5, 0)
 NFCorner.Parent = NewFileBtn
 
--- Refresh button
+-- Refresh button (now rescans directory)
 local RefreshBtnFM = Instance.new("TextButton")
 RefreshBtnFM.Size = UDim2.new(0.08, -5, 1, 0)
 RefreshBtnFM.Position = UDim2.new(0.46, 0, 0, 0)
@@ -573,6 +575,24 @@ local selectedFilePaths = {}  -- table of selected paths (for multi-select)
 local currentFilePath = nil
 local fileButtons = {}  -- button -> file path
 
+-- New function: refresh from filesystem using listfiles()
+function refreshFromFilesystem()
+    local success, files = pcall(listfiles)
+    if not success then
+        print("listfiles() failed: " .. tostring(files))
+        return
+    end
+    -- Clear tracked and rebuild
+    trackedFiles = {}
+    for _, path in ipairs(files) do
+        -- Only add files (not directories), but listfiles usually returns all items.
+        -- We'll add everything; we can filter by extension if needed, but keep it simple.
+        local name = path:match("([^/\\]+)$") or path
+        table.insert(trackedFiles, {path = path, name = name})
+    end
+    refreshFileListDisplay()
+end
+
 -- Track a file (call when exporting or creating new)
 function addTrackedFile(path)
     local name = path:match("([^/\\]+)$") or path
@@ -592,7 +612,6 @@ function removeTrackedFile(path)
             break
         end
     end
-    -- Also remove from selection
     selectedFilePaths[path] = nil
     refreshFileListDisplay()
 end
@@ -635,7 +654,6 @@ function refreshFileListDisplay()
             btn.MouseButton1Click:Connect(function()
                 local ctrlDown = UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) or UserInputService:IsKeyDown(Enum.KeyCode.RightControl)
                 if ctrlDown then
-                    -- Toggle selection
                     if selectedFilePaths[f.path] then
                         selectedFilePaths[f.path] = nil
                         btn.BackgroundColor3 = Color3.fromRGB(40, 40, 55)
@@ -644,7 +662,6 @@ function refreshFileListDisplay()
                         btn.BackgroundColor3 = Color3.fromRGB(70, 100, 140)
                     end
                 else
-                    -- Single select
                     for _, b in ipairs(FileListScroll:GetChildren()) do
                         if b:IsA("TextButton") then
                             b.BackgroundColor3 = Color3.fromRGB(40, 40, 55)
@@ -653,7 +670,6 @@ function refreshFileListDisplay()
                     selectedFilePaths = {}
                     selectedFilePaths[f.path] = true
                     btn.BackgroundColor3 = Color3.fromRGB(70, 100, 140)
-                    -- Load file for editing
                     loadFileContent(f.path)
                 end
                 updateSelectionInfo()
@@ -662,7 +678,6 @@ function refreshFileListDisplay()
             -- Right click: load without selecting
             btn.MouseButton2Click:Connect(function()
                 loadFileContent(f.path)
-                -- Highlight it temporarily
                 for _, b in ipairs(FileListScroll:GetChildren()) do
                     if b:IsA("TextButton") then
                         b.BackgroundColor3 = Color3.fromRGB(40, 40, 55)
@@ -679,12 +694,12 @@ function refreshFileListDisplay()
         local emptyMsg = Instance.new("TextLabel")
         emptyMsg.Size = UDim2.new(1, 0, 0, 30)
         emptyMsg.BackgroundTransparency = 1
-        emptyMsg.Text = (search == "" and "No files tracked yet. Export something first!" or "No files match search")
+        emptyMsg.Text = (search == "" and "No files found in current directory" or "No files match search")
         emptyMsg.TextColor3 = Color3.fromRGB(150, 150, 170)
         emptyMsg.Font = Enum.Font.Gotham
         emptyMsg.TextSize = 13
         emptyMsg.Parent = FileListScroll
-        visibleCount = 1 -- for canvas
+        visibleCount = 1
     end
 
     FileListScroll.CanvasSize = UDim2.new(0, 0, 0, visibleCount * 30 + 10)
@@ -724,6 +739,7 @@ function saveCurrentFile()
         SaveBtnFM.Text = "✅"
         task.wait(1)
         SaveBtnFM.Text = "💾"
+        -- After save, refresh list to update any changes (like file size, but not needed)
     else
         print("❌ Save failed")
         SaveBtnFM.Text = "❌"
@@ -741,7 +757,6 @@ function deleteSelectedFiles()
         print("No files selected")
         return
     end
-    -- Confirm dialog
     local confirm = Instance.new("Frame")
     confirm.Size = UDim2.new(0.25, 0, 0.12, 0)
     confirm.Position = UDim2.new(0.375, 0, 0.4, 0)
@@ -795,7 +810,8 @@ function deleteSelectedFiles()
         end
         confirm:Destroy()
         print("🗑️ Deleted " .. #paths .. " files")
-        refreshFileListDisplay()
+        -- Refresh from filesystem to ensure consistency
+        refreshFromFilesystem()
         FileEditor.Text = "Select a file to edit"
         currentFilePath = nil
     end)
@@ -814,17 +830,14 @@ function openFileExternally()
     end)
 end
 
--- Create new file
 function createNewFile()
     local newName = "newfile_" .. os.date("%H%M%S") .. ".txt"
     local path = newName
-    -- Try to write empty file
     local success = pcall(function()
         writefile(path, "")
     end)
     if success then
         addTrackedFile(path)
-        -- Select and load it
         selectedFilePaths = {}
         selectedFilePaths[path] = true
         loadFileContent(path)
@@ -837,7 +850,7 @@ end
 
 -- Button connections
 NewFileBtn.MouseButton1Click:Connect(createNewFile)
-RefreshBtnFM.MouseButton1Click:Connect(refreshFileListDisplay)
+RefreshBtnFM.MouseButton1Click:Connect(refreshFromFilesystem)  -- now rescans
 SaveBtnFM.MouseButton1Click:Connect(saveCurrentFile)
 OpenBtnFM.MouseButton1Click:Connect(openFileExternally)
 DelBtnFM.MouseButton1Click:Connect(deleteSelectedFiles)
@@ -856,7 +869,6 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
         deleteSelectedFiles()
     end
     if input.KeyCode == Enum.KeyCode.A and (UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) or UserInputService:IsKeyDown(Enum.KeyCode.RightControl)) then
-        -- Select all
         for _, f in ipairs(trackedFiles) do
             selectedFilePaths[f.path] = true
         end
@@ -1040,7 +1052,6 @@ local function checkInstance(inst)
     end
 end
 
--- Start scan
 local function startScan()
     StatusLabel.Text = "Gathering objects..."
     task.wait()
@@ -1094,7 +1105,6 @@ local function startScan()
     populateResults()
 end
 
--- Populate results list
 function populateResults()
     for _, child in ipairs(ListFrame:GetChildren()) do
         if child:IsA("TextButton") then child:Destroy() end
@@ -1320,14 +1330,12 @@ function exportResults(format)
         filename = "KeywordSearch_Results_" .. timestamp .. ".json"
     end
 
-    -- Write file and track it
     local success = pcall(function()
         writefile(filename, text)
     end)
 
     if success then
         print("📄 Exported to: " .. filename)
-        -- Add to tracked files
         addTrackedFile(filename)
         ExportBtn.Text = "✅"
         task.wait(1)
@@ -1359,7 +1367,12 @@ CopyAllBtn.MouseButton1Click:Connect(function()
 end)
 
 -- ========== LAUNCH ==========
+-- First, populate the file manager with all existing files
+refreshFromFilesystem()
+
+-- Then start the keyword scan
 startScan()
-print("✅ Keyword Search v7.0 – Press Right Shift to toggle")
+
+print("✅ Keyword Search v7.1 – Press Right Shift to toggle")
 print("🔥 Left-click to fire, Right-click to copy")
-print("📂 Click 'Files' – files you export will appear. Use Ctrl+Click to multi-select, X to save, Delete to remove.")
+print("📂 Click 'Files' – all files in the current directory are shown. Ctrl+Click to multi-select, X to save, Delete to remove.")
