@@ -1,9 +1,5 @@
 --[[
-    PROFESSIONAL KEYWORD SEARCH v7.1 – WORKING FILE MANAGER (with listfiles)
-    - Now shows ALL files in the current directory on startup
-    - Track new files automatically on export/create
-    - Refresh button rescans the folder
-    - View/edit any file
+    PROFESSIONAL KEYWORD SEARCH v7.2 – WORKING FILE MANAGER (scrollable + loads all files)
 ]]
 
 local player = game.Players.LocalPlayer
@@ -363,8 +359,7 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
     end
 end)
 
--- ========== FILE MANAGER ==========
--- Now uses listfiles() to show ALL files in the current directory
+-- ========== FILE MANAGER (now with scrollable list) ==========
 local FileViewer = Instance.new("Frame")
 FileViewer.Size = UDim2.new(0.85, 0, 0.8, 0)
 FileViewer.Position = UDim2.new(0.075, 0, 0.1, 0)
@@ -387,15 +382,26 @@ FVTitleCorner.CornerRadius = UDim.new(0.015, 0)
 FVTitleCorner.Parent = FVTitle
 
 local FVTitleLabel = Instance.new("TextLabel")
-FVTitleLabel.Size = UDim2.new(0.6, 0, 1, 0)
+FVTitleLabel.Size = UDim2.new(0.55, 0, 1, 0)
 FVTitleLabel.Position = UDim2.new(0.02, 0, 0, 0)
 FVTitleLabel.BackgroundTransparency = 1
-FVTitleLabel.Text = "📂 File Manager (all files)"
+FVTitleLabel.Text = "📂 File Manager"
 FVTitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 FVTitleLabel.Font = Enum.Font.GothamBold
 FVTitleLabel.TextSize = 16
 FVTitleLabel.TextXAlignment = Enum.TextXAlignment.Left
 FVTitleLabel.Parent = FVTitle
+
+local FVFileCount = Instance.new("TextLabel")
+FVFileCount.Size = UDim2.new(0.3, 0, 1, 0)
+FVFileCount.Position = UDim2.new(0.6, 0, 0, 0)
+FVFileCount.BackgroundTransparency = 1
+FVFileCount.Text = "0 files"
+FVFileCount.TextColor3 = Color3.fromRGB(180, 180, 200)
+FVFileCount.Font = Enum.Font.Gotham
+FVFileCount.TextSize = 13
+FVFileCount.TextXAlignment = Enum.TextXAlignment.Right
+FVFileCount.Parent = FVTitle
 
 local FVCloseBtn = Instance.new("TextButton")
 FVCloseBtn.Size = UDim2.new(0.045, 0, 1, 0)
@@ -450,7 +456,7 @@ local NFCorner = Instance.new("UICorner")
 NFCorner.CornerRadius = UDim.new(0.5, 0)
 NFCorner.Parent = NewFileBtn
 
--- Refresh button (now rescans directory)
+-- Refresh button
 local RefreshBtnFM = Instance.new("TextButton")
 RefreshBtnFM.Size = UDim2.new(0.08, -5, 1, 0)
 RefreshBtnFM.Position = UDim2.new(0.46, 0, 0, 0)
@@ -522,12 +528,13 @@ SelInfo.TextSize = 12
 SelInfo.TextXAlignment = Enum.TextXAlignment.Right
 SelInfo.Parent = FMBar
 
--- File list (left)
+-- File list (left) - now scrollable
 local FileListPanel = Instance.new("Frame")
 FileListPanel.Size = UDim2.new(0.35, -10, 1, -0.14)
 FileListPanel.Position = UDim2.new(0, 10, 0.14, 0)
 FileListPanel.BackgroundColor3 = Color3.fromRGB(22, 22, 35)
 FileListPanel.BorderSizePixel = 0
+FileListPanel.ClipsDescendants = true
 FileListPanel.Parent = FileViewer
 local FLPCorner = Instance.new("UICorner")
 FLPCorner.CornerRadius = UDim.new(0.01, 0)
@@ -537,7 +544,8 @@ local FileListScroll = Instance.new("ScrollingFrame")
 FileListScroll.Size = UDim2.new(1, 0, 1, 0)
 FileListScroll.BackgroundTransparency = 1
 FileListScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
-FileListScroll.ScrollBarThickness = 4
+FileListScroll.ScrollBarThickness = 6
+FileListScroll.BorderSizePixel = 0
 FileListScroll.Parent = FileListPanel
 
 local FileListLayout = Instance.new("UIListLayout")
@@ -550,6 +558,7 @@ FileContentPanel.Size = UDim2.new(0.65, -10, 1, -0.14)
 FileContentPanel.Position = UDim2.new(0.35, 10, 0.14, 0)
 FileContentPanel.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
 FileContentPanel.BorderSizePixel = 0
+FileContentPanel.ClipsDescendants = true
 FileContentPanel.Parent = FileViewer
 local FCPCorner = Instance.new("UICorner")
 FCPCorner.CornerRadius = UDim.new(0.01, 0)
@@ -570,41 +579,41 @@ FileEditor.ClearTextOnFocus = false
 FileEditor.Parent = FileContentPanel
 
 -- ========== FILE MANAGEMENT DATA ==========
-local trackedFiles = {}  -- table of {path = string, name = string}
-local selectedFilePaths = {}  -- table of selected paths (for multi-select)
+local trackedFiles = {}
+local selectedFilePaths = {}
 local currentFilePath = nil
-local fileButtons = {}  -- button -> file path
+local fileButtons = {}
 
--- New function: refresh from filesystem using listfiles()
+-- Refresh from filesystem using listfiles()
 function refreshFromFilesystem()
     local success, files = pcall(listfiles)
     if not success then
-        print("listfiles() failed: " .. tostring(files))
+        print("❌ listfiles() failed: " .. tostring(files))
+        -- Show error in file manager title
+        FVFileCount.Text = "⚠️ listfiles error"
         return
     end
-    -- Clear tracked and rebuild
     trackedFiles = {}
     for _, path in ipairs(files) do
-        -- Only add files (not directories), but listfiles usually returns all items.
-        -- We'll add everything; we can filter by extension if needed, but keep it simple.
         local name = path:match("([^/\\]+)$") or path
         table.insert(trackedFiles, {path = path, name = name})
     end
+    FVFileCount.Text = #trackedFiles .. " files"
     refreshFileListDisplay()
 end
 
--- Track a file (call when exporting or creating new)
+-- Add a file (for exports / new files)
 function addTrackedFile(path)
     local name = path:match("([^/\\]+)$") or path
-    -- Avoid duplicates
     for _, f in ipairs(trackedFiles) do
         if f.path == path then return end
     end
     table.insert(trackedFiles, {path = path, name = name})
+    FVFileCount.Text = #trackedFiles .. " files"
     refreshFileListDisplay()
 end
 
--- Remove a file from tracked list (and delete if possible)
+-- Remove a file
 function removeTrackedFile(path)
     for i, f in ipairs(trackedFiles) do
         if f.path == path then
@@ -613,11 +622,13 @@ function removeTrackedFile(path)
         end
     end
     selectedFilePaths[path] = nil
+    FVFileCount.Text = #trackedFiles .. " files"
     refreshFileListDisplay()
 end
 
--- Refresh the file list display based on trackedFiles and search
+-- Refresh the file list display (scrollable)
 function refreshFileListDisplay()
+    -- Clear existing buttons
     for _, child in ipairs(FileListScroll:GetChildren()) do
         if child:IsA("TextButton") then child:Destroy() end
     end
@@ -625,10 +636,12 @@ function refreshFileListDisplay()
 
     local search = FileSearch.Text:lower()
     local visibleCount = 0
+
     for _, f in ipairs(trackedFiles) do
         if search == "" or f.name:lower():find(search) then
             local btn = Instance.new("TextButton")
-            btn.Size = UDim2.new(1, 0, 0, 28)
+            btn.Size = UDim2.new(1, -5, 0, 28)
+            btn.Position = UDim2.new(0, 5, 0, 0)
             btn.BackgroundColor3 = selectedFilePaths[f.path] and Color3.fromRGB(70, 100, 140) or Color3.fromRGB(40, 40, 55)
             btn.BorderSizePixel = 0
             btn.Text = f.name
@@ -650,7 +663,6 @@ function refreshFileListDisplay()
                 end
             end)
 
-            -- Left click: select (toggle with Ctrl)
             btn.MouseButton1Click:Connect(function()
                 local ctrlDown = UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) or UserInputService:IsKeyDown(Enum.KeyCode.RightControl)
                 if ctrlDown then
@@ -675,7 +687,6 @@ function refreshFileListDisplay()
                 updateSelectionInfo()
             end)
 
-            -- Right click: load without selecting
             btn.MouseButton2Click:Connect(function()
                 loadFileContent(f.path)
                 for _, b in ipairs(FileListScroll:GetChildren()) do
@@ -690,11 +701,12 @@ function refreshFileListDisplay()
         end
     end
 
+    -- If nothing found, show message
     if visibleCount == 0 then
         local emptyMsg = Instance.new("TextLabel")
         emptyMsg.Size = UDim2.new(1, 0, 0, 30)
         emptyMsg.BackgroundTransparency = 1
-        emptyMsg.Text = (search == "" and "No files found in current directory" or "No files match search")
+        emptyMsg.Text = (search == "" and "No files found" or "No files match search")
         emptyMsg.TextColor3 = Color3.fromRGB(150, 150, 170)
         emptyMsg.Font = Enum.Font.Gotham
         emptyMsg.TextSize = 13
@@ -702,6 +714,7 @@ function refreshFileListDisplay()
         visibleCount = 1
     end
 
+    -- Update canvas size for scrolling (30px per item + padding)
     FileListScroll.CanvasSize = UDim2.new(0, 0, 0, visibleCount * 30 + 10)
     updateSelectionInfo()
 end
@@ -739,7 +752,6 @@ function saveCurrentFile()
         SaveBtnFM.Text = "✅"
         task.wait(1)
         SaveBtnFM.Text = "💾"
-        -- After save, refresh list to update any changes (like file size, but not needed)
     else
         print("❌ Save failed")
         SaveBtnFM.Text = "❌"
@@ -810,8 +822,7 @@ function deleteSelectedFiles()
         end
         confirm:Destroy()
         print("🗑️ Deleted " .. #paths .. " files")
-        -- Refresh from filesystem to ensure consistency
-        refreshFromFilesystem()
+        refreshFromFilesystem()  -- rescan to update list
         FileEditor.Text = "Select a file to edit"
         currentFilePath = nil
     end)
@@ -850,7 +861,7 @@ end
 
 -- Button connections
 NewFileBtn.MouseButton1Click:Connect(createNewFile)
-RefreshBtnFM.MouseButton1Click:Connect(refreshFromFilesystem)  -- now rescans
+RefreshBtnFM.MouseButton1Click:Connect(refreshFromFilesystem)
 SaveBtnFM.MouseButton1Click:Connect(saveCurrentFile)
 OpenBtnFM.MouseButton1Click:Connect(openFileExternally)
 DelBtnFM.MouseButton1Click:Connect(deleteSelectedFiles)
@@ -881,7 +892,7 @@ ViewFilesBtn.MouseButton1Click:Connect(function()
     FileViewer.Visible = not FileViewer.Visible
     if FileViewer.Visible then
         ViewFilesBtn.Text = "📂 Close Files"
-        refreshFileListDisplay()
+        refreshFileListDisplay()  -- refresh when opened
     else
         ViewFilesBtn.Text = "📂 Files"
     end
@@ -1367,12 +1378,12 @@ CopyAllBtn.MouseButton1Click:Connect(function()
 end)
 
 -- ========== LAUNCH ==========
--- First, populate the file manager with all existing files
+-- First, populate file manager with all files
 refreshFromFilesystem()
 
--- Then start the keyword scan
+-- Start the keyword scan
 startScan()
 
-print("✅ Keyword Search v7.1 – Press Right Shift to toggle")
+print("✅ Keyword Search v7.2 – Press Right Shift to toggle")
 print("🔥 Left-click to fire, Right-click to copy")
-print("📂 Click 'Files' – all files in the current directory are shown. Ctrl+Click to multi-select, X to save, Delete to remove.")
+print("📂 Click 'Files' – all files in current directory are shown. Scroll to browse.")
