@@ -1,269 +1,280 @@
 --[[
-    PREMIUM KEYWORD SEARCH v2
-    - Smooth scrolling with proper CanvasSize updates
-    - Modern dark theme with subtle gradients
-    - Fast scanning with 200‑object chunks
-    - Real‑time progress updates
-    - Click to copy, right‑click to inspect
+    PROFESSIONAL KEYWORD SEARCH TOOL v2.0
+    - Clean, modern UI with rounded corners
+    - Proper scrolling with ScrollingFrame
+    - Real-time scan progress with bar
+    - Click to copy, right-click to inspect
+    - Filter results
+    - Shows match count in header
+    - Fast scanning with chunk processing
+    - Toggle with Right Shift
 ]]
 
 local player = game.Players.LocalPlayer
+local UserInputService = game:GetService("UserInputService")
 
 -- ========== KEYWORDS ==========
 local keywords = {
+    -- Mutations
     "bloodlit","electric","starstruck","rainbow","mutat","mutation","mut","boost",
     "bloodmoon","lightning","shocked","starfull","cloudy","weather","rain","storm",
     "event","trigger","apply","effect","buff","debuff","aura",
+    -- Growth
     "plant","harvest","sell","buy","seed","crop","garden","plot","water",
     "sprinkler","grow","growth","speed","time","progress","stage","mature",
     "acorn","berry","fruit","vegetable","flower","tree",
+    -- Economy & Dupe
     "dupe","duplicate","clone","spawn","give","add","remove","take",
     "currency","shekel","money","cash","coin","gem","premium","shop","store",
+    -- Remotes
     "remote","event","function","bindable","unreliable","fire","invoke","send",
     "server","client","replicate","network","rpc","signal","callback",
+    -- Pets
     "pet","egg","hatch","incubate","ability","buff","bonus","chance","luck",
     "companion","familiar","beast","creature",
+    -- Player
     "player","stats","inventory","backpack","tool","gear","item","quantity",
     "level","exp","experience","rank","tier",
+    -- Size & Weight
     "size","weight","mass","scale","big","large","small","giant","tiny",
     "multiplier","bonus","factor","modifier",
+    -- Stealing
     "steal","thief","rob","take","night","dark","moon","lunar","sneak",
-    "admin","mod","god","cheat","exploit","bypass","noclip","fly","speed","jump",
-    "debug","test","dev","development","sandbox","studio","secret",
-    "gui","screen","frame","label","button","textbox","scroll","list",
-    "menu","dialog","popup","notification",
+    -- Admin
+    "admin","mod","god","cheat","bypass","noclip","fly","speed","jump",
+    "debug","test","dev","development","sandbox","studio",
+    -- Misc
     "gold","silver","bronze","legendary","rare","common","uncommon",
 }
 
--- Convert to lowercase for speed
-for i, kw in ipairs(keywords) do
-    keywords[i] = kw:lower()
-end
+for i, kw in ipairs(keywords) do keywords[i] = kw:lower() end
 
 -- ========== CREATE GUI ==========
-local gui = Instance.new("ScreenGui")
-gui.Name = "PremiumSearch"
-gui.ResetOnSpawn = false
-gui.Parent = player:WaitForChild("PlayerGui")
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "KeywordSearch"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = player:WaitForChild("PlayerGui")
 
--- Main window
-local main = Instance.new("Frame")
-main.Size = UDim2.new(0, 620, 0, 500)
-main.Position = UDim2.new(0.5, -310, 0.5, -250)
-main.BackgroundColor3 = Color3.fromRGB(28, 28, 38)
-main.BorderSizePixel = 0
-main.ClipsDescendants = true
-main.Parent = gui
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0.35, 0, 0.75, 0)
+MainFrame.Position = UDim2.new(0.325, 0, 0.125, 0)
+MainFrame.BackgroundColor3 = Color3.fromRGB(28, 28, 38)
+MainFrame.BorderSizePixel = 0
+MainFrame.ClipsDescendants = true
+MainFrame.Parent = ScreenGui
 
--- Rounded corners
-local corner = Instance.new("UICorner")
-corner.CornerRadius = UDim.new(0, 10)
-corner.Parent = main
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0.02, 0)
+UICorner.Parent = MainFrame
 
--- Glow border (optional)
-local border = Instance.new("Frame")
-border.Size = UDim2.new(1, 0, 1, 0)
-border.Position = UDim2.new(0, 0, 0, 0)
-border.BackgroundTransparency = 1
-border.BorderSizePixel = 0
-border.Parent = main
-local borderGrad = Instance.new("UIGradient")
-borderGrad.Color = ColorSequence.new({
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(80, 60, 200)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(60, 180, 200))
-})
-borderGrad.Parent = border
+-- ========== TITLE BAR ==========
+local TitleBar = Instance.new("Frame")
+TitleBar.Size = UDim2.new(1, 0, 0.07, 0)
+TitleBar.BackgroundColor3 = Color3.fromRGB(38, 38, 50)
+TitleBar.BorderSizePixel = 0
+TitleBar.Parent = MainFrame
+local TitleBarCorner = Instance.new("UICorner")
+TitleBarCorner.CornerRadius = UDim.new(0.02, 0)
+TitleBarCorner.Parent = TitleBar
 
--- Title bar
-local title = Instance.new("Frame")
-title.Size = UDim2.new(1, 0, 0, 42)
-title.BackgroundColor3 = Color3.fromRGB(35, 35, 48)
-title.BorderSizePixel = 0
-title.Parent = main
-local titleCorner = Instance.new("UICorner")
-titleCorner.CornerRadius = UDim.new(0, 10)
-titleCorner.Parent = title
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(0.8, 0, 1, 0)
+Title.Position = UDim2.new(0.03, 0, 0, 0)
+Title.Text = "🔍 Keyword Search"
+Title.TextSize = 20
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.BackgroundTransparency = 1
+Title.Font = Enum.Font.GothamBold
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.Parent = TitleBar
 
-local titleLabel = Instance.new("TextLabel")
-titleLabel.Size = UDim2.new(1, -100, 1, 0)
-titleLabel.Position = UDim2.new(0, 16, 0, 0)
-titleLabel.BackgroundTransparency = 1
-titleLabel.Text = "🔍 Keyword Search"
-titleLabel.TextColor3 = Color3.fromRGB(255,255,255)
-titleLabel.TextXAlignment = Enum.TextXAlignment.Left
-titleLabel.Font = Enum.Font.GothamBold
-titleLabel.TextSize = 18
-titleLabel.Parent = title
+local MatchCount = Instance.new("TextLabel")
+MatchCount.Size = UDim2.new(0.25, 0, 1, 0)
+MatchCount.Position = UDim2.new(0.75, 0, 0, 0)
+MatchCount.Text = "0 found"
+MatchCount.TextSize = 14
+MatchCount.TextColor3 = Color3.fromRGB(180, 180, 200)
+MatchCount.BackgroundTransparency = 1
+MatchCount.Font = Enum.Font.Gotham
+MatchCount.Parent = TitleBar
 
-local closeBtn = Instance.new("TextButton")
-closeBtn.Size = UDim2.new(0, 40, 1, 0)
-closeBtn.Position = UDim2.new(1, -40, 0, 0)
-closeBtn.BackgroundTransparency = 1
-closeBtn.Text = "✕"
-closeBtn.TextColor3 = Color3.fromRGB(200,200,200)
-closeBtn.Font = Enum.Font.GothamBold
-closeBtn.TextSize = 20
-closeBtn.Parent = title
-closeBtn.MouseButton1Click:Connect(function() gui:Destroy() end)
+local CloseBtn = Instance.new("TextButton")
+CloseBtn.Size = UDim2.new(0.05, 0, 1, 0)
+CloseBtn.Position = UDim2.new(0.95, 0, 0, 0)
+CloseBtn.Text = "✕"
+CloseBtn.TextSize = 18
+CloseBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
+CloseBtn.BackgroundTransparency = 1
+CloseBtn.Font = Enum.Font.GothamBold
+CloseBtn.Parent = TitleBar
+CloseBtn.MouseButton1Click:Connect(function() ScreenGui:Destroy() end)
 
 -- ========== DRAGGING ==========
 local drag = false
 local dragStart, dragOffset
-title.InputBegan:Connect(function(i)
+TitleBar.InputBegan:Connect(function(i)
     if i.UserInputType == Enum.UserInputType.MouseButton1 then
         drag = true
         dragStart = i.Position
-        dragOffset = main.Position
+        dragOffset = MainFrame.Position
     end
 end)
-title.InputEnded:Connect(function(i)
+TitleBar.InputEnded:Connect(function(i)
     if i.UserInputType == Enum.UserInputType.MouseButton1 then drag = false end
 end)
-game:GetService("UserInputService").InputChanged:Connect(function(i)
+UserInputService.InputChanged:Connect(function(i)
     if drag and i.UserInputType == Enum.UserInputType.MouseMovement then
         local delta = i.Position - dragStart
-        main.Position = UDim2.new(dragOffset.X.Scale, dragOffset.X.Offset + delta.X,
-                                  dragOffset.Y.Scale, dragOffset.Y.Offset + delta.Y)
+        MainFrame.Position = UDim2.new(dragOffset.X.Scale, dragOffset.X.Offset + delta.X,
+                                       dragOffset.Y.Scale, dragOffset.Y.Offset + delta.Y)
     end
 end)
 
--- ========== CONTENT AREA ==========
-local content = Instance.new("Frame")
-content.Size = UDim2.new(1, -20, 1, -62)
-content.Position = UDim2.new(0, 10, 0, 52)
-content.BackgroundTransparency = 1
-content.Parent = main
+-- ========== TOGGLE WITH RIGHT SHIFT ==========
+local guiVisible = true
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if input.KeyCode == Enum.KeyCode.RightShift then
+        guiVisible = not guiVisible
+        MainFrame.Visible = guiVisible
+    end
+end)
+
+-- ========== CONTENT ==========
+local Content = Instance.new("Frame")
+Content.Size = UDim2.new(1, -16, 1, -0.12)
+Content.Position = UDim2.new(0, 8, 0.08, 0)
+Content.BackgroundTransparency = 1
+Content.Parent = MainFrame
 
 -- ========== PROGRESS VIEW ==========
-local progressView = Instance.new("Frame")
-progressView.Size = UDim2.new(1, 0, 1, 0)
-progressView.BackgroundTransparency = 1
-progressView.Parent = content
+local ProgressView = Instance.new("Frame")
+ProgressView.Size = UDim2.new(1, 0, 1, 0)
+ProgressView.BackgroundTransparency = 1
+ProgressView.Parent = Content
 
-local statusLabel = Instance.new("TextLabel")
-statusLabel.Size = UDim2.new(1, 0, 0, 30)
-statusLabel.Position = UDim2.new(0, 0, 0, 20)
-statusLabel.BackgroundTransparency = 1
-statusLabel.Text = "Preparing scan..."
-statusLabel.TextColor3 = Color3.fromRGB(230,230,230)
-statusLabel.Font = Enum.Font.Gotham
-statusLabel.TextSize = 18
-statusLabel.Parent = progressView
+local StatusLabel = Instance.new("TextLabel")
+StatusLabel.Size = UDim2.new(1, 0, 0.1, 0)
+StatusLabel.Position = UDim2.new(0, 0, 0.05, 0)
+StatusLabel.BackgroundTransparency = 1
+StatusLabel.Text = "Preparing scan..."
+StatusLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
+StatusLabel.Font = Enum.Font.Gotham
+StatusLabel.TextSize = 16
+StatusLabel.Parent = ProgressView
 
-local barBg = Instance.new("Frame")
-barBg.Size = UDim2.new(0.8, 0, 0, 18)
-barBg.Position = UDim2.new(0.1, 0, 0, 70)
-barBg.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
-barBg.BorderSizePixel = 0
-barBg.Parent = progressView
-local barBgCorner = Instance.new("UICorner")
-barBgCorner.CornerRadius = UDim.new(0, 4)
-barBgCorner.Parent = barBg
+local BarBg = Instance.new("Frame")
+BarBg.Size = UDim2.new(0.9, 0, 0.06, 0)
+BarBg.Position = UDim2.new(0.05, 0, 0.2, 0)
+BarBg.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+BarBg.BorderSizePixel = 0
+BarBg.Parent = ProgressView
+local BarBgCorner = Instance.new("UICorner")
+BarBgCorner.CornerRadius = UDim.new(0.5, 0)
+BarBgCorner.Parent = BarBg
 
-local barFill = Instance.new("Frame")
-barFill.Size = UDim2.new(0, 0, 1, 0)
-barFill.BackgroundColor3 = Color3.fromRGB(80, 160, 255)
-barFill.BorderSizePixel = 0
-barFill.Parent = barBg
-local barFillCorner = Instance.new("UICorner")
-barFillCorner.CornerRadius = UDim.new(0, 4)
-barFillCorner.Parent = barFill
--- Gradient
-local grad = Instance.new("UIGradient")
-grad.Color = ColorSequence.new({
+local BarFill = Instance.new("Frame")
+BarFill.Size = UDim2.new(0, 0, 1, 0)
+BarFill.BackgroundColor3 = Color3.fromRGB(80, 160, 255)
+BarFill.BorderSizePixel = 0
+BarFill.Parent = BarBg
+local BarFillCorner = Instance.new("UICorner")
+BarFillCorner.CornerRadius = UDim.new(0.5, 0)
+BarFillCorner.Parent = BarFill
+
+local Grad = Instance.new("UIGradient")
+Grad.Color = ColorSequence.new({
     ColorSequenceKeypoint.new(0, Color3.fromRGB(80, 160, 255)),
     ColorSequenceKeypoint.new(1, Color3.fromRGB(140, 80, 255))
 })
-grad.Parent = barFill
+Grad.Parent = BarFill
 
-local progressText = Instance.new("TextLabel")
-progressText.Size = UDim2.new(1, 0, 0, 30)
-progressText.Position = UDim2.new(0, 0, 0, 105)
-progressText.BackgroundTransparency = 1
-progressText.Text = "0%"
-progressText.TextColor3 = Color3.fromRGB(200,200,200)
-progressText.Font = Enum.Font.Gotham
-progressText.TextSize = 16
-progressText.Parent = progressView
+local ProgressText = Instance.new("TextLabel")
+ProgressText.Size = UDim2.new(1, 0, 0.08, 0)
+ProgressText.Position = UDim2.new(0, 0, 0.3, 0)
+ProgressText.BackgroundTransparency = 1
+ProgressText.Text = "0%"
+ProgressText.TextColor3 = Color3.fromRGB(200, 200, 200)
+ProgressText.Font = Enum.Font.Gotham
+ProgressText.TextSize = 18
+ProgressText.Parent = ProgressView
 
-local foundCountLabel = Instance.new("TextLabel")
-foundCountLabel.Size = UDim2.new(1, 0, 0, 30)
-foundCountLabel.Position = UDim2.new(0, 0, 0, 145)
-foundCountLabel.BackgroundTransparency = 1
-foundCountLabel.Text = "Found: 0 matches"
-foundCountLabel.TextColor3 = Color3.fromRGB(180,180,180)
-foundCountLabel.Font = Enum.Font.Gotham
-foundCountLabel.TextSize = 15
-foundCountLabel.Parent = progressView
+local FoundLabel = Instance.new("TextLabel")
+FoundLabel.Size = UDim2.new(1, 0, 0.08, 0)
+FoundLabel.Position = UDim2.new(0, 0, 0.42, 0)
+FoundLabel.BackgroundTransparency = 1
+FoundLabel.Text = "Found: 0 matches"
+FoundLabel.TextColor3 = Color3.fromRGB(180, 180, 180)
+FoundLabel.Font = Enum.Font.Gotham
+FoundLabel.TextSize = 15
+FoundLabel.Parent = ProgressView
 
-local cancelBtn = Instance.new("TextButton")
-cancelBtn.Size = UDim2.new(0, 140, 0, 36)
-cancelBtn.Position = UDim2.new(0.5, -70, 0, 195)
-cancelBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
-cancelBtn.BorderSizePixel = 0
-cancelBtn.Text = "Cancel Scan"
-cancelBtn.TextColor3 = Color3.fromRGB(255,255,255)
-cancelBtn.Font = Enum.Font.GothamBold
-cancelBtn.TextSize = 15
-cancelBtn.Parent = progressView
-local cancelCorner = Instance.new("UICorner")
-cancelCorner.CornerRadius = UDim.new(0, 6)
-cancelCorner.Parent = cancelBtn
-cancelBtn.MouseEnter:Connect(function() cancelBtn.BackgroundColor3 = Color3.fromRGB(200, 60, 60) end)
-cancelBtn.MouseLeave:Connect(function() cancelBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50) end)
+local CancelBtn = Instance.new("TextButton")
+CancelBtn.Size = UDim2.new(0.3, 0, 0.08, 0)
+CancelBtn.Position = UDim2.new(0.35, 0, 0.55, 0)
+CancelBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+CancelBtn.BorderSizePixel = 0
+CancelBtn.Text = "Cancel"
+CancelBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+CancelBtn.Font = Enum.Font.GothamBold
+CancelBtn.TextSize = 15
+CancelBtn.Parent = ProgressView
+local CancelCorner = Instance.new("UICorner")
+CancelCorner.CornerRadius = UDim.new(0.5, 0)
+CancelCorner.Parent = CancelBtn
 
 local scanCancelled = false
-cancelBtn.MouseButton1Click:Connect(function()
+CancelBtn.MouseButton1Click:Connect(function()
     scanCancelled = true
-    statusLabel.Text = "❌ Cancelled"
-    progressText.Text = "Cancelled"
-    barFill.BackgroundColor3 = Color3.fromRGB(255, 80, 80)
-    barFill.Size = UDim2.new(1, 0, 1, 0)
-    cancelBtn.Visible = false
+    StatusLabel.Text = "❌ Cancelled"
+    ProgressText.Text = "Cancelled"
+    BarFill.BackgroundColor3 = Color3.fromRGB(255, 80, 80)
+    BarFill.Size = UDim2.new(1, 0, 1, 0)
+    CancelBtn.Visible = false
 end)
 
 -- ========== RESULTS VIEW ==========
-local resultsView = Instance.new("Frame")
-resultsView.Size = UDim2.new(1, 0, 1, 0)
-resultsView.BackgroundTransparency = 1
-resultsView.Visible = false
-resultsView.Parent = content
+local ResultsView = Instance.new("Frame")
+ResultsView.Size = UDim2.new(1, 0, 1, 0)
+ResultsView.BackgroundTransparency = 1
+ResultsView.Visible = false
+ResultsView.Parent = Content
 
-local filterBox = Instance.new("TextBox")
-filterBox.Size = UDim2.new(1, 0, 0, 32)
-filterBox.Position = UDim2.new(0, 0, 0, 0)
-filterBox.BackgroundColor3 = Color3.fromRGB(22, 22, 32)
-filterBox.BorderSizePixel = 0
-filterBox.Text = ""
-filterBox.PlaceholderText = "🔍 Filter results..."
-filterBox.TextColor3 = Color3.fromRGB(230,230,230)
-filterBox.PlaceholderColor3 = Color3.fromRGB(130,130,130)
-filterBox.Font = Enum.Font.Gotham
-filterBox.TextSize = 14
-filterBox.Parent = resultsView
-local filterCorner = Instance.new("UICorner")
-filterCorner.CornerRadius = UDim.new(0, 6)
-filterCorner.Parent = filterBox
+-- Filter box
+local FilterBox = Instance.new("TextBox")
+FilterBox.Size = UDim2.new(1, 0, 0.08, 0)
+FilterBox.Position = UDim2.new(0, 0, 0, 0)
+FilterBox.BackgroundColor3 = Color3.fromRGB(22, 22, 32)
+FilterBox.BorderSizePixel = 0
+FilterBox.Text = ""
+FilterBox.PlaceholderText = "🔍 Filter results..."
+FilterBox.TextColor3 = Color3.fromRGB(230, 230, 230)
+FilterBox.PlaceholderColor3 = Color3.fromRGB(130, 130, 130)
+FilterBox.Font = Enum.Font.Gotham
+FilterBox.TextSize = 14
+FilterBox.Parent = ResultsView
+local FilterCorner = Instance.new("UICorner")
+FilterCorner.CornerRadius = UDim.new(0.5, 0)
+FilterCorner.Parent = FilterBox
 
--- ScrollingFrame for results
-local listFrame = Instance.new("ScrollingFrame")
-listFrame.Size = UDim2.new(1, 0, 1, -40)
-listFrame.Position = UDim2.new(0, 0, 0, 40)
-listFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 28)
-listFrame.BorderSizePixel = 0
-listFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
-listFrame.ScrollBarThickness = 6
-listFrame.Parent = resultsView
-local listCorner = Instance.new("UICorner")
-listCorner.CornerRadius = UDim.new(0, 6)
-listCorner.Parent = listFrame
+-- Scrollable results list
+local ListFrame = Instance.new("ScrollingFrame")
+ListFrame.Size = UDim2.new(1, 0, 1, -0.09)
+ListFrame.Position = UDim2.new(0, 0, 0.09, 0)
+ListFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 28)
+ListFrame.BorderSizePixel = 0
+ListFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+ListFrame.ScrollBarThickness = 6
+ListFrame.Parent = ResultsView
+local ListCorner = Instance.new("UICorner")
+ListCorner.CornerRadius = UDim.new(0.02, 0)
+ListCorner.Parent = ListFrame
 
--- UIListLayout for auto layout
-local listLayout = Instance.new("UIListLayout")
-listLayout.Padding = UDim.new(0, 2)
-listLayout.Parent = listFrame
+local ListLayout = Instance.new("UIListLayout")
+ListLayout.Padding = UDim.new(0, 2)
+ListLayout.Parent = ListFrame
 
--- ========== SCANNING ENGINE ==========
+-- ========== SCAN ENGINE ==========
 local results = {}
 
 local function matchesAny(str)
@@ -278,12 +289,10 @@ local function matchesAny(str)
 end
 
 local function checkInstance(inst)
-    -- Check name/class
     if matchesAny(inst.Name) or matchesAny(inst.ClassName) then
         table.insert(results, inst)
         return
     end
-    -- Check string properties
     local props = {"Value", "Text", "DisplayName", "Title", "Description", "Tag"}
     for i = 1, #props do
         local ok, val = pcall(function() return inst[props[i]] end)
@@ -292,7 +301,6 @@ local function checkInstance(inst)
             return
         end
     end
-    -- Check attributes
     local attrs = inst:GetAttributes()
     for key, val in pairs(attrs) do
         if (type(key) == "string" and matchesAny(key)) or (type(val) == "string" and matchesAny(val)) then
@@ -304,24 +312,24 @@ end
 
 -- ========== START SCAN ==========
 local function startScan()
-    statusLabel.Text = "Gathering objects..."
+    StatusLabel.Text = "Gathering objects..."
     task.wait()
 
     local allObjects = game:GetDescendants()
     local total = #allObjects
-    statusLabel.Text = "Scanning " .. total .. " objects..."
+    StatusLabel.Text = "Scanning " .. total .. " objects..."
     task.wait()
 
     local processed = 0
     scanCancelled = false
     results = {}
-    barFill.Size = UDim2.new(0, 0, 1, 0)
-    barFill.BackgroundColor3 = Color3.fromRGB(80, 160, 255)
-    progressText.Text = "0%"
-    foundCountLabel.Text = "Found: 0 matches"
-    cancelBtn.Visible = true
+    BarFill.Size = UDim2.new(0, 0, 1, 0)
+    BarFill.BackgroundColor3 = Color3.fromRGB(80, 160, 255)
+    ProgressText.Text = "0%"
+    FoundLabel.Text = "Found: 0 matches"
+    CancelBtn.Visible = true
 
-    local chunkSize = 200  -- faster updates, less lag
+    local chunkSize = 300
     for i = 1, total, chunkSize do
         if scanCancelled then break end
         local chunkEnd = math.min(i + chunkSize - 1, total)
@@ -329,39 +337,37 @@ local function startScan()
             checkInstance(allObjects[j])
             processed = processed + 1
         end
-        -- Update UI
         local pct = (processed / total) * 100
-        barFill.Size = UDim2.new(pct/100, 0, 1, 0)
-        progressText.Text = string.format("%.1f%%", pct)
-        statusLabel.Text = "Processing " .. processed .. "/" .. total
-        foundCountLabel.Text = "Found: " .. #results .. " matches"
-        task.wait()  -- yield to update
+        BarFill.Size = UDim2.new(pct/100, 0, 1, 0)
+        ProgressText.Text = string.format("%.1f%%", pct)
+        StatusLabel.Text = "Processing " .. processed .. "/" .. total
+        FoundLabel.Text = "Found: " .. #results .. " matches"
+        task.wait()
     end
 
     if scanCancelled then
-        statusLabel.Text = "❌ Cancelled"
-        progressText.Text = "Cancelled"
-        barFill.BackgroundColor3 = Color3.fromRGB(255, 80, 80)
+        StatusLabel.Text = "❌ Cancelled"
+        ProgressText.Text = "Cancelled"
+        BarFill.BackgroundColor3 = Color3.fromRGB(255, 80, 80)
         return
     end
 
-    -- Complete
-    statusLabel.Text = "✅ Scan complete!"
-    progressText.Text = "100%"
-    barFill.Size = UDim2.new(1, 0, 1, 0)
-    barFill.BackgroundColor3 = Color3.fromRGB(80, 220, 80)
-    foundCountLabel.Text = "Found: " .. #results .. " matches"
+    StatusLabel.Text = "✅ Scan complete!"
+    ProgressText.Text = "100%"
+    BarFill.Size = UDim2.new(1, 0, 1, 0)
+    BarFill.BackgroundColor3 = Color3.fromRGB(80, 220, 80)
+    FoundLabel.Text = "Found: " .. #results .. " matches"
+    MatchCount.Text = #results .. " found"
     task.wait(0.3)
 
-    progressView.Visible = false
-    resultsView.Visible = true
+    ProgressView.Visible = false
+    ResultsView.Visible = true
     populateResults()
 end
 
 -- ========== POPULATE RESULTS ==========
 function populateResults()
-    -- Clear existing items
-    for _, child in ipairs(listFrame:GetChildren()) do
+    for _, child in ipairs(ListFrame:GetChildren()) do
         if child:IsA("TextButton") then child:Destroy() end
     end
 
@@ -377,15 +383,15 @@ function populateResults()
     for _, inst in ipairs(results) do
         local path = inst:GetFullName()
         local btn = Instance.new("TextButton")
-        btn.Size = UDim2.new(1, 0, 0, 26)
+        btn.Size = UDim2.new(1, 0, 0, 30)
         btn.BackgroundColor3 = Color3.fromRGB(40, 40, 55)
         btn.BorderSizePixel = 0
         btn.Text = path
-        btn.TextColor3 = Color3.fromRGB(230,230,230)
+        btn.TextColor3 = Color3.fromRGB(230, 230, 230)
         btn.TextXAlignment = Enum.TextXAlignment.Left
         btn.Font = Enum.Font.Gotham
         btn.TextSize = 13
-        btn.Parent = listFrame
+        btn.Parent = ListFrame
 
         btn.MouseEnter:Connect(function() btn.BackgroundColor3 = Color3.fromRGB(55, 55, 75) end)
         btn.MouseLeave:Connect(function() btn.BackgroundColor3 = Color3.fromRGB(40, 40, 55) end)
@@ -400,7 +406,7 @@ function populateResults()
         btn.MouseButton2Click:Connect(function()
             if inspectFn then
                 inspectFn(inst)
-                print("🔍 Inspecting: " .. path)
+                print("🔍 Inspecting: " + path)
             else
                 copyToClipboard(path)
                 print("📋 Copied path (inspect unavailable)")
@@ -409,15 +415,13 @@ function populateResults()
     end
 
     local count = #results
-    -- Update CanvasSize based on number of items
-    listFrame.CanvasSize = UDim2.new(0, 0, 0, count * 28 + 10)
-    titleLabel.Text = "🔍 Results (" .. count .. " matches)"
+    ListFrame.CanvasSize = UDim2.new(0, 0, 0, count * 32 + 10)
+    MatchCount.Text = count .. " found"
 
-    -- Filter
-    filterBox:GetPropertyChangedSignal("Text"):Connect(function()
-        local filter = filterBox.Text:lower()
+    FilterBox:GetPropertyChangedSignal("Text"):Connect(function()
+        local filter = FilterBox.Text:lower()
         local visible = 0
-        for _, btn in ipairs(listFrame:GetChildren()) do
+        for _, btn in ipairs(ListFrame:GetChildren()) do
             if btn:IsA("TextButton") then
                 if filter == "" or btn.Text:lower():find(filter) then
                     btn.Visible = true
@@ -427,10 +431,10 @@ function populateResults()
                 end
             end
         end
-        listFrame.CanvasSize = UDim2.new(0, 0, 0, visible * 28 + 10)
+        ListFrame.CanvasSize = UDim2.new(0, 0, 0, visible * 32 + 10)
     end)
 end
 
 -- ========== LAUNCH ==========
 startScan()
-print("✅ Premium Search loaded – scanning...")
+print("✅ Professional Keyword Search loaded – Press Right Shift to toggle")
